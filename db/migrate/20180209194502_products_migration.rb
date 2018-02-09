@@ -1,4 +1,4 @@
-class ProductMigration < ActiveRecord::Migration[5.1]
+class ProductsMigration < ActiveRecord::Migration[5.1]
   def change
     create_table :products do |t|
       t.integer :site_id # links product to collects
