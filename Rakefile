@@ -1,23 +1,37 @@
 require "active_record"
 require 'yaml'
-require 'standalone_migrations'
-StandaloneMigrations::Tasks.load_tasks
 
 namespace :db do
-
-  db_config       = YAML::load(File.open('db/config.yml'))
-  db_config_admin = db_config.merge({'database' => 'postgres', 'schema_search_path' => 'public'})
-
   desc "Create the database"
   task :create do
-    ActiveRecord::Base.establish_connection(db_config_admin)
-    ActiveRecord::Base.connection.create_database(db_config["database"])
-    puts "Database created."
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+
+    ActiveRecord::Base.connection.create_database({
+     :adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+        puts "Database created."
   end
 
   desc "Migrate the database"
   task :migrate do
-    ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+
     ActiveRecord::Migrator.migrate("db/migrate/")
     Rake::Task["db:schema"].invoke
     puts "Database migrated."
@@ -26,8 +40,13 @@ namespace :db do
   desc "Drop the database"
   task :drop do
     ActiveRecord::Base.establish_connection(db_config_admin)
-    ActiveRecord::Base.connection.drop_database(db_config["database"])
-    puts "Database deleted."
+    ActiveRecord::Base.connection.drop_database({:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     puts "Database deleted."
   end
 
   desc "Reset the database"
@@ -35,14 +54,19 @@ namespace :db do
 
   desc 'Create a db/schema.rb file that is portable against any DB supported by AR'
   task :schema do
-    ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.establish_connection({:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
     require 'active_record/schema_dumper'
     filename = "db/schema.rb"
+
     File.open(filename, "w:utf-8") do |file|
       ActiveRecord::SchemaDumper.dump(ActiveRecord::Base.connection, file)
     end
   end
-
 end
 
 namespace :g do
@@ -55,12 +79,12 @@ namespace :g do
 
     File.open(path, 'w') do |file|
       file.write <<-EOF
-class #{migration_class} < ActiveRecord::Migration
-  def self.up
-  end
-  def self.down
-  end
-end
+    class #{migration_class} < ActiveRecord::Migration
+      def self.up
+      end
+      def self.down
+      end
+    end
       EOF
     end
 
