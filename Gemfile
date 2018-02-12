@@ -15,3 +15,4 @@ gem 'pg', '~> 0.18.4'
 # test suite
 gem 'rspec'
 gem 'factory_bot'
+gem 'database_cleaner'

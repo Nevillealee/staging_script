@@ -4,13 +4,16 @@ require 'spec_helper'
 
 # Non-rails related specs do not require `:type` metadata by default
 RSpec.describe Product, :type => :model do
-  #Association test
-  #ensure Product model has one:many relationship with Option model
-  it 'should have_many options, dependant :destroy'
-  #
+  let(:product) { create(:product) }
   # Validation tests
-  #ensure columns title and created_by are not null before saving
-  it 'should validate presence of(:title)'
-  it 'should validate presence of(:vendor)'
-  it 'should validate presence of(:product_type)'
+  context 'before api call is made' do
+    it 'is valid with title, vendor, product_type fields' do
+      expect(product).to be_valid
+    end
+
+    it 'is invalid without title, vendor, or product_type' do
+      # creates product without attributes
+      expect(Product.create(vendor: 'fam brands')).not_to be_valid
+    end
+  end
 end

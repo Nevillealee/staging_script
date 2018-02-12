@@ -1,5 +1,6 @@
 require "active_record"
 require 'yaml'
+require './elleStaging.rb'
 
 namespace :db do
   desc "Create the database"
@@ -90,5 +91,12 @@ namespace :g do
 
     puts "Migration #{path} created"
     abort # needed stop other tasks
+  end
+end
+
+namespace :staging do
+  desc "print product response"
+  task :print do
+    Product.print
   end
 end
