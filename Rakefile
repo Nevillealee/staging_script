@@ -106,7 +106,7 @@ namespace :product do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     ProductAPI.copy_products_locally
+     ProductAPI.copy_products_local
   end
 end
 
@@ -120,7 +120,18 @@ namespace :customcollection do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     CustomCollectionAPI.copy_collections_locally
+     CustomCollectionAPI.copy_collections_local
+  end
+  
+  task :push_actives do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     CustomCollectionAPI.copy_collections_remote
   end
 end
 
@@ -134,6 +145,6 @@ namespace :collect do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     CollectAPI.copy_collects_locally
+     CollectAPI.copy_collects_local
   end
 end

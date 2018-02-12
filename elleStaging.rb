@@ -17,20 +17,25 @@ module CustomCollectionAPI
 
   # iterates through custom collections to copy them to staging one by one
   # with the same titles. handles auto generated once POSTed
-  def self.copy_collections
+  def self.copy_collections_remote
     # sets shopify gem to staging site
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
     # grabs title of each custom collection to use as paramter for new
     # custom collection object created in POST request
     # to staging sight using ShopifyAPI gem
-    @active_collection["custom_collections"].each do |current|
-      ShopifyAPI::CustomCollection.create!(title: current["title"], template_suffix: current["template_suffix"])
-    end
+    cc = CustomCollection.first
+    # cc.each do |current|
+      ShopifyAPI::CustomCollection.create!(title: cc.title,
+      body_html: cc.body_html,
+      sort_order: cc.sort_order,
+      template_suffix: cc.template_suffix,
+      published_scope: cc.published_scope)
+    # end
     p "transfer complete"
   end
 
-  def self.copy_collections_locally
+  def self.copy_collections_local
     # iterates through each custom collection
     # and saves copy to local db
     @active_collection["custom_collections"].each do |current|
@@ -99,7 +104,7 @@ module ProductAPI
   # TODO(Neville Lee): figure how to use this method and api
   # with active record
 
-  def self.copy_products_locally
+  def self.copy_products_local
     # loop iterates through each product returned
     # saving a copy locally in database attribute
     # by attribute
@@ -167,7 +172,7 @@ module CollectAPI
   # GET request for all custom collections from ellieactive shop
   @active_collection = HTTParty.get(ellie_active_url)
 
-  def self.copy_collects_locally
+  def self.copy_collects_local
     # iterates through each custom collection
     # and saves copy to local db
     @active_collection["collects"].each do |current|
