@@ -1,7 +1,9 @@
 require "active_record"
 require 'yaml'
 require './elleStaging.rb'
-
+require './models/product.rb'
+require './models/variant.rb'
+require './models/option.rb'
 namespace :db do
   desc "Create the database"
   task :create do
@@ -94,9 +96,16 @@ namespace :g do
   end
 end
 
-namespace :staging do
+namespace :product do
   desc "print product response"
-  task :print do
-    Product.print
+  task :pull_actives do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     ProductAPI.copy_products_locally
   end
 end

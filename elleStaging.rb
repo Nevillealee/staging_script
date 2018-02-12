@@ -5,7 +5,7 @@ require 'pp'
 # automation suite tranfers data from active ellie
 # site, parses JSON responses, and POSTs to staging
 # ellie site for testing
-module CustomCollection
+module CustomCollectionAPI
   # TODO(Neville lee): implement Durrells throttling algorithm
   # set ellie_active_url back to all custom_collections endpoint
   #
@@ -43,14 +43,16 @@ module CustomCollection
   end
 end
 
-module Product
+module ProductAPI
   # TODO(Neville lee) implement Durrells throttling algorithm
   # set ellie_active_url back to all products endpoint
   #
   # sets ellie active url to FIRST FIVE products endpoint
-  ellie_active_url ="https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/products.json?limit=5"
+  ellie_active_url =
+  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/products.json"
   # GET request for all products from ellieactive shop
   @active_product = HTTParty.get(ellie_active_url)
+
   # iterates through products to copy them to staging one by one
   # with the same titles. handles auto generated once POSTed
 
@@ -80,17 +82,49 @@ module Product
   # database through  active record
   # TODO(Neville Lee): figure how to use this method and api
   # with active record
+
   def self.copy_products_locally
     # loop iterates through each product returned
     # saving a copy locally in database attribute
     # by attribute
     @active_product["products"].each do |current|
-      Product.create!(title: current["title"],
+      prod = Product.create!(title: current["title"],
        body_html: current["body_html"],
        vendor: current["vendor"],
        product_type: current["product_type"],
-       variants: current["variants"],
-       options: current["options"])
+       handle: current["handle"],
+       site_id: current["id"], # product id from ellie active
+       template_suffix: current["template_suffix"],
+       published_scope: current["published_scope"],
+       tags: current["tags"],
+       images: current["images"])
+       # iterate through each nested variant array
+       # inside each product for deep clone
+       current["variants"].each do |current_variant|
+         Variant.create!(site_id: current_variant["product_id"], # ID OF LINKED PRODUCT ON ellie ative
+         product_id: prod.id, # LINK TO FK FOR active record ASSOCIATION
+         title: current_variant["title"],
+         option1: current_variant["option1"],
+         sku: current_variant["sku"],
+         price: current_variant["price"],
+         barcode: current_variant["barcode"],
+         compare_at_price: current_variant["compare_at_price"],
+         fulfillment_service: current_variant["fulfillment_service"],
+         grams: current_variant["grams"],
+         image_id: current_variant["image_id"],
+         inventory_management: current_variant["inventory_management"],
+         inventory_policy: current_variant["inventory_policy"],
+         weight_unit: current_variant["weight_unit"])
+       end
+       current["options"].each do |current_option|
+         Option.create!(site_id: current_option["product_id"], #ID of LINKED product on ellie active
+         product_id: prod.id,
+         name: current_option["name"],
+         position: current_option["position"],
+         values: current_option["values"], #converts array of sizes into string
+         images: current_option["images"],
+         image: current_option["image"])
+       end
     end
   end
 

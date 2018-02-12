@@ -16,10 +16,15 @@ ActiveRecord::Schema.define(version: 20180209220619) do
   enable_extension "plpgsql"
 
   create_table "options", force: :cascade do |t|
-    t.jsonb "one"
+    t.string "site_id"
     t.integer "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "name"
+    t.string "values", array: true
+    t.string "images", array: true
+    t.string "image"
+    t.integer "position"
     t.index ["product_id"], name: "index_options_on_product_id"
   end
 
@@ -33,7 +38,7 @@ ActiveRecord::Schema.define(version: 20180209220619) do
   end
 
   create_table "products", force: :cascade do |t|
-    t.integer "site_id"
+    t.string "site_id"
     t.string "title", null: false
     t.string "body_html", default: ""
     t.string "vendor", null: false
@@ -43,14 +48,13 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "published_scope"
     t.jsonb "images"
     t.string "tags", array: true
-    t.string "options", array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
   create_table "variants", force: :cascade do |t|
     t.string "title"
-    t.integer "site_id"
+    t.string "site_id"
     t.string "option1", null: false
     t.string "sku"
     t.string "price"
