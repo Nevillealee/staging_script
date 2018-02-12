@@ -9,15 +9,15 @@ module CustomCollectionAPI
   # TODO(Neville lee): implement Durrells throttling algorithm
   # set ellie_active_url back to all custom_collections endpoint
   #
-  # sets ellie active url to FIRST FIVE Custom Collections endpoint
+  # sets ellie active url to Custom Collections endpoint
   ellie_active_url =
-  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=5"
+  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250"
   # GET request for all custom collections from ellieactive shop
   @active_collection = HTTParty.get(ellie_active_url)
 
   # iterates through custom collections to copy them to staging one by one
   # with the same titles. handles auto generated once POSTed
-  def self.copyCollections
+  def self.copy_collections
     # sets shopify gem to staging site
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
@@ -29,6 +29,22 @@ module CustomCollectionAPI
     end
     p "transfer complete"
   end
+
+  def self.copy_collections_locally
+    # iterates through each custom collection
+    # and saves copy to local db
+    @active_collection["custom_collections"].each do |current|
+      CustomCollection.create!(site_id: current["id"],
+      handle: current["handle"],
+      title: current["title"],
+      body_html: current["body_html"],
+      sort_order: current["sort_order"],
+      template_suffix: current["template_suffix"],
+      published_scope: current["published_scope"])
+    end
+    p "Custom Collections saved succesfully"
+  end
+
   # prints custom collection keys arguement
   def self.printKeys(key)
      @active_collection["custom_collections"].each do |x|
@@ -49,7 +65,7 @@ module ProductAPI
   #
   # sets ellie active url to FIRST FIVE products endpoint
   ellie_active_url =
-  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/products.json"
+  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/products.json?limit=250"
   # GET request for all products from ellieactive shop
   @active_product = HTTParty.get(ellie_active_url)
 
@@ -126,6 +142,7 @@ module ProductAPI
          image: current_option["image"])
        end
     end
+    p "Products saved succesfully"
   end
 
   # prints custom collection keys arguement
@@ -140,5 +157,26 @@ module ProductAPI
     @active_product["products"].each do |x|
      pp x
    end
+  end
+end
+
+module CollectAPI
+  # sets ellie active url to Custom Collections endpoint
+  ellie_active_url =
+  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/collects.json?limit=250"
+  # GET request for all custom collections from ellieactive shop
+  @active_collection = HTTParty.get(ellie_active_url)
+
+  def self.copy_collects_locally
+    # iterates through each custom collection
+    # and saves copy to local db
+    @active_collection["collects"].each do |current|
+      Collect.create!(site_id: current["id"],
+        collection_id: current["collection_id"],
+        featured: current["featured"],
+        position: current["position"],
+        product_id: current["product_id"])
+    end
+    p "Collects succesfully saved"
   end
 end

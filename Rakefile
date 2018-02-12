@@ -1,9 +1,9 @@
 require "active_record"
 require 'yaml'
 require './elleStaging.rb'
-require './models/product.rb'
-require './models/variant.rb'
-require './models/option.rb'
+require 'dotenv/load'
+Dir["./models/*.rb"].each {|file| require file }
+
 namespace :db do
   desc "Create the database"
   task :create do
@@ -97,7 +97,7 @@ namespace :g do
 end
 
 namespace :product do
-  desc "print product response"
+  desc "saves product api response"
   task :pull_actives do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
@@ -107,5 +107,33 @@ namespace :product do
      :username => 'postgres',
      :password => 'postgres'})
      ProductAPI.copy_products_locally
+  end
+end
+
+namespace :customcollection do
+  desc "saves custom collection response"
+  task :pull_actives do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     CustomCollectionAPI.copy_collections_locally
+  end
+end
+
+namespace :collect do
+  desc "saves collect response"
+  task :pull_actives do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     CollectAPI.copy_collects_locally
   end
 end

@@ -15,6 +15,28 @@ ActiveRecord::Schema.define(version: 20180209220619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
+  create_table "collects", force: :cascade do |t|
+    t.string "collection_id"
+    t.boolean "featured"
+    t.string "site_id"
+    t.integer "position"
+    t.string "product_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "custom_collections", force: :cascade do |t|
+    t.string "site_id"
+    t.string "handle"
+    t.string "title"
+    t.string "body_html"
+    t.string "sort_order"
+    t.string "template_suffix"
+    t.string "published_scope"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "options", force: :cascade do |t|
     t.string "site_id"
     t.integer "product_id"
@@ -42,7 +64,7 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "title", null: false
     t.string "body_html", default: ""
     t.string "vendor", null: false
-    t.string "product_type", null: false
+    t.string "product_type", default: "", null: false
     t.string "handle"
     t.string "template_suffix"
     t.string "published_scope"
