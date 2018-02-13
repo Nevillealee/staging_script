@@ -74,6 +74,17 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "staging_collects", force: :cascade do |t|
+    t.string "new_cc_id"
+    t.string "custom_collection_handle"
+    t.string "old_cc_id"
+    t.string "new_p_id"
+    t.string "product_handle"
+    t.string "old_p_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "staging_custom_collections", force: :cascade do |t|
     t.string "site_id"
     t.string "handle"

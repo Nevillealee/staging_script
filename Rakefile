@@ -3,6 +3,7 @@ require 'yaml'
 require './elleStaging.rb'
 require 'dotenv/load'
 Dir["./models/*.rb"].each {|file| require file }
+require 'pp'
 
 namespace :db do
   desc "Create the database"
@@ -172,4 +173,30 @@ namespace :collect do
      :password => 'postgres'})
      CollectAPI.active_to_db
   end
+end
+
+namespace :query do
+  desc "tests query"
+  task :test do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     arr = StagingCollect.find_by_sql(
+         "SELECT scc.site_id as new_cc_id,
+          scc.handle as custom_collection_handle, cc.site_id as old_cc_id,
+          sp.site_id as new_p_id,
+          sp.handle as product_handle,  p.site_id as old_p_id
+          FROM collects c
+          INNER JOIN products p ON c.product_id = p.site_id
+          INNER JOIN custom_collections cc ON c.collection_id = cc.site_id
+          INNER JOIN staging_products sp ON p.handle = sp.handle
+          INNER JOIN staging_custom_collections scc ON cc.handle = scc.handle;")
+     arr.each do |x|
+       pp x["new_p_id"]
+     end
+   end
 end
