@@ -74,6 +74,33 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "staging_custom_collections", force: :cascade do |t|
+    t.string "site_id"
+    t.string "handle"
+    t.string "title"
+    t.string "body_html"
+    t.string "sort_order"
+    t.string "template_suffix"
+    t.string "published_scope"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "staging_products", force: :cascade do |t|
+    t.string "site_id"
+    t.string "title", null: false
+    t.string "body_html"
+    t.string "vendor", null: false
+    t.string "product_type"
+    t.string "handle"
+    t.string "template_suffix"
+    t.string "published_scope"
+    t.jsonb "images"
+    t.string "tags", array: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "variants", force: :cascade do |t|
     t.string "title"
     t.string "site_id"

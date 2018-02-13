@@ -97,8 +97,8 @@ namespace :g do
 end
 
 namespace :product do
-  desc "saves product api response"
-  task :pull_actives do
+  desc "saves active product api response"
+  task :save_actives do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
      :database => 'test',
@@ -106,13 +106,25 @@ namespace :product do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     ProductAPI.copy_products_local
+     ProductAPI.active_to_db
+  end
+
+  desc "saves staging products to db"
+  task :save_stages do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     ProductAPI.stage_to_db
   end
 end
 
 namespace :customcollection do
-  desc "saves custom collection response"
-  task :pull_actives do
+  desc "saves active custom collection to db"
+  task :save_actives do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
      :database => 'test',
@@ -120,10 +132,11 @@ namespace :customcollection do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     CustomCollectionAPI.copy_collections_local
+     CustomCollectionAPI.active_to_db
   end
-  
-  task :push_actives do
+
+  desc "POSTs custom collections from db to staging"
+  task :push_locals do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
      :database => 'test',
@@ -131,13 +144,25 @@ namespace :customcollection do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     CustomCollectionAPI.copy_collections_remote
+     CustomCollectionAPI.db_to_stage
+  end
+
+  desc "saves staging custom collections to db"
+  task :save_stages do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     CustomCollectionAPI.stage_to_db
   end
 end
 
 namespace :collect do
-  desc "saves collect response"
-  task :pull_actives do
+  desc "saves active collects to db"
+  task :save_actives do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
      :database => 'test',
@@ -145,6 +170,6 @@ namespace :collect do
      :port => '5432',
      :username => 'postgres',
      :password => 'postgres'})
-     CollectAPI.copy_collects_local
+     CollectAPI.active_to_db
   end
 end
