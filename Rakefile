@@ -1,7 +1,7 @@
 require "active_record"
 require 'yaml'
-require './elleStaging.rb'
 require 'dotenv/load'
+Dir["./modules/*.rb"].each {|file| require file }
 Dir["./models/*.rb"].each {|file| require file }
 require 'pp'
 
