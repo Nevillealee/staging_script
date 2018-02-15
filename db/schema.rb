@@ -52,11 +52,12 @@ ActiveRecord::Schema.define(version: 20180209220619) do
 
   create_table "product_metafields", force: :cascade do |t|
     t.string "namespace"
-    t.string "namespace_key"
-    t.integer "product_id"
+    t.string "key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["product_id"], name: "index_product_metafields_on_product_id"
+    t.string "value"
+    t.string "owner_id"
+    t.string "value_type"
   end
 
   create_table "products", force: :cascade do |t|
@@ -133,6 +134,5 @@ ActiveRecord::Schema.define(version: 20180209220619) do
   end
 
   add_foreign_key "options", "products"
-  add_foreign_key "product_metafields", "products"
   add_foreign_key "variants", "products"
 end
