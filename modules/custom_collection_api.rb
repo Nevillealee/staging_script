@@ -8,32 +8,58 @@ require 'pp'
 # ellie site for testing
 module CustomCollectionAPI
   ######################################################
-  active_custom_collection_count = ShopifyAPI::CustomCollection.count
-  nb_pages = (active_custom_collection_count/250.0).ceil
-  @active_collection = []
+  ACTIVE_COLLECTION = []
+  STAGING_COLLECTION = []
 
-  # Initalize @active_product with all active products from Ellie.com
-  1.upto(nb_pages) do |page| # throttling conditon
-    ellie_active_url =
-    "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
-    @parsed_response = (HTTParty.get(ellie_active_url))
-    # appends each product hash to @active_product array
-    @active_collection.push(@parsed_response["custom_collections"])
-    p "active custom collections set #{page} loaded, sleeping 3"
-    sleep 3
+  def self.initialize_actives
+    ShopifyAPI::Base.site =
+    "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin"
+    active_custom_collection_count = ShopifyAPI::CustomCollection.count
+    nb_pages = (active_custom_collection_count/250.0).ceil
+
+    # Initalize ACTIVE_COLLECTION with all active custom collections from Ellie.com
+    1.upto(nb_pages) do |page| # throttling conditon
+      ellie_active_url =
+      "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
+      @parsed_response = (HTTParty.get(ellie_active_url))
+      # appends each product hash to ACTIVE_COLLECTION array
+      ACTIVE_COLLECTION.push(@parsed_response["custom_collections"])
+      p "active custom collections set #{page} loaded, sleeping 3"
+      sleep 3
+    end
+      p "active custom collections initialized"
+      # combine hash arrays from each page
+      # into single product array
+      ACTIVE_COLLECTION.flatten!
   end
-    p "active custom collections initialized"
-    # combine hash arrays from each page
-    # into single product array
-    @active_collection.flatten!
+
+  def self.initialize_stages
+    ShopifyAPI::Base.site =
+    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
+    staging_custom_collection_count = ShopifyAPI::CustomCollection.count
+    nb_pages = (staging_custom_collection_count/250.0).ceil
+
+    # Initalize STAGING_COLLECTION with all staging custom collections from elliestaging
+    1.upto(nb_pages) do |page|
+      ellie_staging_url =
+      "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
+      @parsed_response = (HTTParty.get(ellie_staging_url))
+      # appends each product hash to @STAGING_COLLECTION array
+      STAGING_COLLECTION.push(@parsed_response["custom_collections"])
+      p "staging custom collections set #{page} loaded, sleeping 3"
+      sleep 3
+    end
+      p "staging custom collections initialized"
+      # combine hash arrays from each page
+      # into single product array
+      STAGING_COLLECTION.flatten!
+  end
   ######################################################
 
   def self.stage_to_db # STAGING to DB
-    ellie_staging_url =
-    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250"
-    @staging_collection = HTTParty.get(ellie_staging_url)
+    self.initialize_stages
 
-    @staging_collection["custom_collections"].each do |current|
+    STAGING_COLLECTION.each do |current|
       StagingCustomCollection.create!(site_id: current["id"],
       handle: current["handle"],
       title: current["title"],
@@ -45,8 +71,8 @@ module CustomCollectionAPI
     p "Staging Custom Collections saved succesfully"
   end
 
+  #TODO(Neville Lee): THROTTLING ALGORITHM
   def self.db_to_stage # DB to STAGING
-    # sets shopify gem to staging site
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
     # grabs title of each custom collection to use as paramter for new
@@ -64,7 +90,9 @@ module CustomCollectionAPI
   end
 
   def self.active_to_db # ACTIVE to DB
-    @active_collection.each do |current|
+  self.initialize_actives
+  
+    ACTIVE_COLLECTION.each do |current|
       CustomCollection.create!(site_id: current["id"],
       handle: current["handle"],
       title: current["title"],
@@ -78,13 +106,13 @@ module CustomCollectionAPI
 
   # prints custom collection keys arguement
   def self.printKeys(key)
-     @active_collection.each do |x|
+     ACTIVE_COLLECTION.each do |x|
       p x[key]
     end
   end
   # prints all custom_collections from active site
   def self.print
-    @active_collection.each do |x|
+    ACTIVE_COLLECTION.each do |x|
       pp x
    end
   end
