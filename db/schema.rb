@@ -39,7 +39,7 @@ ActiveRecord::Schema.define(version: 20180209220619) do
 
   create_table "options", force: :cascade do |t|
     t.string "site_id"
-    t.integer "product_id"
+    t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "name"
@@ -122,12 +122,12 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "barcode"
     t.boolean "compare_at_price"
     t.string "fulfillment_service"
-    t.integer "grams"
-    t.integer "image_id"
+    t.bigint "grams"
+    t.bigint "image_id"
     t.string "inventory_management"
     t.string "inventory_policy"
     t.string "weight_unit"
-    t.integer "product_id"
+    t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["product_id"], name: "index_variants_on_product_id"

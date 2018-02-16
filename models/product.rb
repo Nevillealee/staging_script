@@ -4,5 +4,4 @@ class Product < ActiveRecord::Base
   # TODO(Neville Lee): has_one?
   has_many :options, dependent: :destroy
   # TODO(Neville Lee): has_one?
-  has_many :product_metafields, dependent: :destroy
 end

@@ -7,11 +7,26 @@ require 'pp'
 # site, parses JSON responses, and POSTs to staging
 # ellie site for testing
 module CustomCollectionAPI
-  # TODO(Neville lee): implement Durrells throttling algorithm
-  ellie_active_url =
-  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250"
-  # GET request for all custom collections from ellieactive shop
-  @active_collection = HTTParty.get(ellie_active_url)
+  ######################################################
+  active_custom_collection_count = ShopifyAPI::CustomCollection.count
+  nb_pages = (active_custom_collection_count/250.0).ceil
+  @active_collection = []
+
+  # Initalize @active_product with all active products from Ellie.com
+  1.upto(nb_pages) do |page| # throttling conditon
+    ellie_active_url =
+    "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
+    @parsed_response = (HTTParty.get(ellie_active_url))
+    # appends each product hash to @active_product array
+    @active_collection.push(@parsed_response["custom_collections"])
+    p "active custom collections set #{page} loaded, sleeping 3"
+    sleep 3
+  end
+    p "active custom collections initialized"
+    # combine hash arrays from each page
+    # into single product array
+    @active_collection.flatten!
+  ######################################################
 
   def self.stage_to_db # STAGING to DB
     ellie_staging_url =
@@ -49,7 +64,7 @@ module CustomCollectionAPI
   end
 
   def self.active_to_db # ACTIVE to DB
-    @active_collection["custom_collections"].each do |current|
+    @active_collection.each do |current|
       CustomCollection.create!(site_id: current["id"],
       handle: current["handle"],
       title: current["title"],
@@ -63,13 +78,13 @@ module CustomCollectionAPI
 
   # prints custom collection keys arguement
   def self.printKeys(key)
-     @active_collection["custom_collections"].each do |x|
+     @active_collection.each do |x|
       p x[key]
     end
   end
   # prints all custom_collections from active site
   def self.print
-    @response["custom_collections"].each do |x|
+    @active_collection.each do |x|
       pp x
    end
   end
