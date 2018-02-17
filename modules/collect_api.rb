@@ -4,14 +4,33 @@ require 'shopify_api'
 require 'pp'
 
 module CollectAPI
-  # sets ellie active url to Custom Collections endpoint
-  ellie_active_url =
-  "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/collects.json?limit=250"
-  # GET request for all custom collections from ellieactive shop
-  @active_collection = HTTParty.get(ellie_active_url)
+  ACTIVE_COLLECT = []
+
+  def self.initialize_actives
+    ShopifyAPI::Base.site =
+    "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin"
+    active_collect_count = ShopifyAPI::Collect.count
+    nb_pages = (active_collect_count/250.0).ceil
+
+    # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
+    1.upto(nb_pages) do |page| # throttling conditon
+      ellie_active_url =
+      "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
+      @parsed_response = (HTTParty.get(ellie_active_url))
+      # appends each product hash to ACTIVE_PRODUCT array
+      ACTIVE_COLLECT.push(@parsed_response["collects"])
+      p "active collects set #{page} loaded, sleeping 3"
+      sleep 3
+    end
+      p "active colects initialized"
+      # combine hash arrays from each page
+      # into single collect array
+      ACTIVE_COLLECT.flatten!
+  end
 
   def self.active_to_db # ACTIVE to DB
-    @active_collection["collects"].each do |current|
+    self.initialize_actives
+    ACTIVE_COLLECT.each do |current|
       Collect.create!(site_id: current["id"],
         collection_id: current["collection_id"],
         featured: current["featured"],
@@ -21,6 +40,7 @@ module CollectAPI
     p "Collects succesfully saved"
   end
 
+  #TODO(Neville Lee): throttling algorithm
   def self.db_to_stage #DB TO STAGING
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"

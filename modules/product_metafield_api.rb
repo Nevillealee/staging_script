@@ -7,29 +7,31 @@ Dir["./modules/*.rb"].each {|file| require file }
 Dir["./models/*.rb"].each {|file| require file }
 
 module ProductMetafieldAPI
-  ActiveRecord::Base.establish_connection(
-  {:adapter => 'postgresql',
-   :database => 'test',
-   :host => 'localhost',
-   :port => '5432',
-   :username => 'postgres',
-   :password => 'postgres'})
+  def self.shopify_api_throttle
+    return if ShopifyAPI.credit_left > 5
+    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
+    puts "SLEEPING 10"
+    sleep 10
+  end
 
-def self.stage_to_db
+def self.active_to_db
   # Creates an array of distinct product ids (site_id field in db)
   # from latest GET Products request from ellie.com
   # saved into local db to use for metafield GET request loop.
+
   @product_ids = Product.select("site_id").distinct
   # Initialize ShopifyAPI gem with active site url
   ShopifyAPI::Base.site =
   "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin"
 
   @product_ids.each do |x|
+    self.shopify_api_throttle
     current_meta = ShopifyAPI::Metafield.all(params:
      {resource: 'products',
       resource_id: x.site_id,
       fields: 'namespace, key, value'})
-      if current_meta[0] #TODO(Neville Lee): Verify what to do with products with no metafield
+
+      if  current_meta != nil && current_meta[0]  #(Neville Lee): Verify what to do with products with no metafield
       # saves metafields for products with valid
       # namespace & that belong to a CustomCollection
       if current_meta[0].namespace != "EWD_UFAQ" &&
@@ -48,5 +50,6 @@ def self.stage_to_db
       end
     end
   end #product_ids loop
+  p "active product metafields saved successfully"
 end # self.test
 end # module
