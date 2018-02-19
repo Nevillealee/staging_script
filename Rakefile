@@ -200,4 +200,16 @@ namespace :productmetafield do
      :password => 'postgres'})
      ProductMetafieldAPI.active_to_db
    end
+
+   desc "pushes local product metafields to staging"
+   task :push_locals do
+     ActiveRecord::Base.establish_connection(
+     {:adapter => 'postgresql',
+      :database => 'test',
+      :host => 'localhost',
+      :port => '5432',
+      :username => 'postgres',
+      :password => 'postgres'})
+      ProductMetafieldAPI.db_to_stage
+    end
 end

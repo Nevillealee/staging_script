@@ -27,7 +27,6 @@ def self.active_to_db
   "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin"
 
   @product_ids.each do |x|
-    self.shopify_api_throttle
     current_meta = ShopifyAPI::Metafield.all(params:
      {resource: 'products',
       resource_id: x.site_id,
@@ -43,6 +42,7 @@ def self.active_to_db
         ProductMetafield.create(namespace: current_meta[0].namespace,
         key: current_meta[0].key,
         value: current_meta[0].value,
+        value_type: 'string',
         owner_id: x.site_id)
       elsif ShopifyAPI::CustomCollection.find(:all, :params => { product_id: x.site_id })
         # POST new metafield object
@@ -55,9 +55,38 @@ def self.active_to_db
   p "active product metafields saved successfully"
 end # self.test
 
+# creates an array of all product_metafields from db
+# iterates through array creating new product_metafields
+# one by on with shopify gem method
+
 def self.db_to_stage
   ShopifyAPI::Base.site =
   "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
 
+  # Join product_metafields, products and staging_products
+  # to link staging product_id to active product_id
+  # before creating product_metafields with new
+  # staging_product_id as owner_id
+  @metafields = ProductMetafield.find_by_sql(
+  "SELECT product_metafields .*,
+   p.title as active_product,
+    sp.site_id as staging_product_id FROM product_metafields
+    INNER JOIN products p ON product_metafields.owner_id = p.site_id
+    INNER JOIN staging_products sp ON p.title = sp.title;")
+
+  p 'pushing  local product_metafields to staging..'
+
+  @metafields.each do |current|
+    self.shopify_api_throttle
+    myprod = ShopifyAPI::Product.find(current.staging_product_id)
+
+    myprod.add_metafield(ShopifyAPI::Metafield.new( {
+    namespace: current.namespace,
+    key: current.key,
+    value: current.value,
+    value_type: current.value_type } ))
+    myprod.save
+  end
+  p 'product_metafields successfully pushed to staging'
 end
 end # module
