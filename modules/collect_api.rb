@@ -4,6 +4,15 @@ require 'shopify_api'
 require 'pp'
 
 module CollectAPI
+  def self.shopify_api_throttle
+    ShopifyAPI::Base.site =
+    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
+    return if ShopifyAPI.credit_left > 5
+    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
+    puts "SLEEPING 10"
+    sleep 10
+  end
+  
   ACTIVE_COLLECT = []
 
   def self.initialize_actives
@@ -40,7 +49,6 @@ module CollectAPI
     p "Collects succesfully saved"
   end
 
-  #TODO(Neville Lee): throttling algorithm
   def self.db_to_stage #DB TO STAGING
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
@@ -58,9 +66,12 @@ module CollectAPI
        INNER JOIN staging_custom_collections scc ON cc.handle = scc.handle;")
        # creates clone of active collects on ellie staging
        # based on current data in local db
+       p 'pushing local collects to staging...'
     @collect_matches.each do |current|
-      ShopifyAPI::Collect.create!(product_id: current["new_p_id"],
+      CollectAPI.shopify_api_throttle
+      ShopifyAPI::Collect.create(product_id: current["new_p_id"],
        collection_id: current["new_cc_id"])
     end
+    p 'local collects successfully pushed to staging'
   end
 end

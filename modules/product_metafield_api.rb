@@ -8,6 +8,8 @@ Dir["./models/*.rb"].each {|file| require file }
 
 module ProductMetafieldAPI
   def self.shopify_api_throttle
+    ShopifyAPI::Base.site =
+    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts "SLEEPING 10"
@@ -52,4 +54,10 @@ def self.active_to_db
   end #product_ids loop
   p "active product metafields saved successfully"
 end # self.test
+
+def self.db_to_stage
+  ShopifyAPI::Base.site =
+  "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
+
+end
 end # module

@@ -1,12 +1,13 @@
-require "active_record"
+require 'active_record'
 require 'yaml'
 require 'dotenv/load'
-Dir["./modules/*.rb"].each {|file| require file }
-Dir["./models/*.rb"].each {|file| require file }
+Dir['./modules/*.rb'].each {|file| require file }
+Dir['./models/*.rb'].each {|file| require file }
 require 'pp'
+require 'shopify_api'
 
 namespace :db do
-  desc "Create the database"
+  desc 'Create the database'
   task :create do
     ActiveRecord::Base.establish_connection(
     {:adapter => 'postgresql',
@@ -172,6 +173,18 @@ namespace :collect do
      :username => 'postgres',
      :password => 'postgres'})
      CollectAPI.active_to_db
+  end
+
+  desc "pushes active collects in db to staging"
+  task :push_locals do
+    ActiveRecord::Base.establish_connection(
+    {:adapter => 'postgresql',
+     :database => 'test',
+     :host => 'localhost',
+     :port => '5432',
+     :username => 'postgres',
+     :password => 'postgres'})
+     CollectAPI.db_to_stage
   end
 end
 

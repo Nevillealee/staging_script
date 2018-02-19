@@ -7,7 +7,15 @@ require 'pp'
 # site, parses JSON responses, and POSTs to staging
 # ellie site for testing
 module CustomCollectionAPI
-  ######################################################
+  def self.shopify_api_throttle
+    ShopifyAPI::Base.site =
+    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
+    return if ShopifyAPI.credit_left > 5
+    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
+    puts "SLEEPING 10"
+    sleep 10
+  end
+
   ACTIVE_COLLECTION = []
   STAGING_COLLECTION = []
 
@@ -54,7 +62,6 @@ module CustomCollectionAPI
       # into single product array
       STAGING_COLLECTION.flatten!
   end
-  ######################################################
 
   def self.stage_to_db # STAGING to DB
     self.initialize_stages
@@ -71,7 +78,6 @@ module CustomCollectionAPI
     p "Staging Custom Collections saved succesfully"
   end
 
-  #TODO(Neville Lee): THROTTLING ALGORITHM
   def self.db_to_stage # DB to STAGING
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
@@ -80,6 +86,7 @@ module CustomCollectionAPI
     # to staging sight using ShopifyAPI gem
     cc = CustomCollection.all
     cc.each do |current|
+      CustomCollectionAPI.shopify_api_throttle
       ShopifyAPI::CustomCollection.create!(title: current.title,
       body_html: current.body_html,
       sort_order: current.sort_order,
@@ -91,7 +98,7 @@ module CustomCollectionAPI
 
   def self.active_to_db # ACTIVE to DB
   self.initialize_actives
-  
+
     ACTIVE_COLLECTION.each do |current|
       CustomCollection.create!(site_id: current["id"],
       handle: current["handle"],

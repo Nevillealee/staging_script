@@ -4,11 +4,18 @@ require 'shopify_api'
 require 'pp'
 
 module ProductAPI
-  # TODO(Neville lee) implement Durrells throttling algorithm
-  # set ellie_active_url back to all products endpoint
+  def self.shopify_api_throttle
+    ShopifyAPI::Base.site =
+    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
+    return if ShopifyAPI.credit_left > 5
+    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
+    puts "SLEEPING 10"
+    sleep 10
+  end
+  
   ACTIVE_PRODUCT = []
   STAGING_PRODUCT = []
-  ######################################################
+
   def self.initialize_actives
     ShopifyAPI::Base.site =
     "https://#{ENV["ACTIVE_API_KEY"]}:#{ENV["ACTIVE_API_PW"]}@#{ENV["ACTIVE_SHOP"]}.myshopify.com/admin"
@@ -52,7 +59,6 @@ module ProductAPI
       # into single product array
       STAGING_PRODUCT.flatten!
   end
-  ######################################################
 
   # saves ellie staging products
   # without variants or options attributes.
