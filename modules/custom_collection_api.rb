@@ -83,6 +83,7 @@ module CustomCollectionAPI
     # custom collection object created in POST request
     # to staging sight using ShopifyAPI gem
     cc = CustomCollection.all
+    p 'Pushing local Custom Collections to staging...'
     cc.each do |current|
       CustomCollectionAPI.shopify_api_throttle
       ShopifyAPI::CustomCollection.create!(title: current.title,

@@ -150,22 +150,4 @@ def self.active_to_db # ACTIVE to DB
   end
   p "Active products saved succesfully"
 end
-
-# prints custom collection keys arguement
-def self.print_keys(key)
-  self.initialize_actives
-
-   ACTIVE_PRODUCT.each do |x|
-    p x[key]
-  end
-end
-
-  # prints all custom_collections from active site
-  def self.print
-    self.initialize_actives
-
-    ACTIVE_PRODUCT.each do |x|
-     pp x
-   end
-  end
 end
