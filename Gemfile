@@ -6,7 +6,6 @@ gem 'dotenv'
 gem 'httparty'
 gem 'shopify_api'
 
-
 # Use postgresql as the database for Active Record
 gem 'activerecord', '~> 5.0', '>= 5.0.0.1'
 gem 'standalone_migrations'

@@ -8,8 +8,6 @@ require 'pp'
 # ellie site for testing
 module CustomCollectionAPI
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-    "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts "SLEEPING 10"
@@ -109,18 +107,5 @@ module CustomCollectionAPI
       published_scope: current["published_scope"])
     end
     p "Custom Collections saved succesfully"
-  end
-
-  # prints custom collection keys arguement
-  def self.printKeys(key)
-     ACTIVE_COLLECTION.each do |x|
-      p x[key]
-    end
-  end
-  # prints all custom_collections from active site
-  def self.print
-    ACTIVE_COLLECTION.each do |x|
-      pp x
-   end
   end
 end
