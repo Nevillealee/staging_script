@@ -86,6 +86,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.7.0)
     rspec-support (3.7.1)
+    ruby-progressbar (1.9.0)
     shopify_api (4.9.0)
       activeresource (>= 3.0.0)
       rack
@@ -110,6 +111,7 @@ DEPENDENCIES
   pg (~> 0.18.4)
   require_all
   rspec
+  ruby-progressbar (~> 1.9)
   shopify_api
   standalone_migrations
 

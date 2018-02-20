@@ -3,6 +3,7 @@ require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
 require 'active_record'
+require 'ruby-progressbar'
 Dir["./modules/*.rb"].each {|file| require file }
 Dir["./models/*.rb"].each {|file| require file }
 
@@ -11,8 +12,8 @@ module ProductMetafieldAPI
     ShopifyAPI::Base.site =
     "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
-    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
-    puts "SLEEPING 10"
+    # puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
+    # puts "SLEEPING 10"
     sleep 10
   end
 
@@ -30,7 +31,6 @@ def self.active_to_db
      {resource: 'products',
       resource_id: x.site_id,
       fields: 'namespace, key, value'})
-
       if  current_meta != nil && current_meta[0]  #(Neville Lee): Verify what to do with products with no metafield
       # saves metafields for products with valid
       # namespace & that belong to a CustomCollection
@@ -52,7 +52,7 @@ def self.active_to_db
     end
   end #product_ids loop
   p "active product metafields saved successfully"
-end # self.test
+end # self.active_to_db
 
 # creates an array of all product_metafields from db
 # iterates through array creating new product_metafields
@@ -71,7 +71,13 @@ def self.db_to_stage
     sp.site_id as staging_product_id FROM product_metafields
     INNER JOIN products p ON product_metafields.owner_id = p.site_id
     INNER JOIN staging_products sp ON p.title = sp.title;")
-  p 'pushing local product_metafields to staging.. This may take several minutes'
+    size = @metafields.size
+    progressbar = ProgressBar.create(
+    title: 'Progess',
+    starting_at: 1,
+    total: size,
+    format: "%t: %p%%  |%B|")
+  p "pushing local product_metafields to staging.. This may take several minutes..."
 
   @metafields.each do |current|
     self.shopify_api_throttle
@@ -81,8 +87,8 @@ def self.db_to_stage
     key: current.key,
     value: current.value,
     value_type: 'string' } ))
-    p myprod
     myprod.save
+    progressbar.increment
   end
   p 'product_metafields successfully pushed to staging'
 end

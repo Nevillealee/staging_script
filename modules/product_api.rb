@@ -80,11 +80,8 @@ module ProductAPI
     p "staging products saved to db"
   end
 
-# TODO(Neville Lee): change to deep copy if csv not used
-# copies (shallow) active products directly into staging site
 def self.active_to_stage # ACTIVE to STAGING
   self.initialize_actives
-
   ShopifyAPI::Base.site =
   "https://#{ENV["STAGING_API_KEY"]}:#{ENV["STAGING_API_PW"]}@#{ENV["STAGING_SHOP"]}.myshopify.com/admin"
   # grabs title, body_html, vendor, product_type, and variants
