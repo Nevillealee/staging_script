@@ -6,7 +6,7 @@ Dir['./models/*.rb'].each {|file| require file }
 require 'pp'
 require 'shopify_api'
 
-db_config = YAML::load(File.open('db/database.yml'))
+db_config = YAML.load(File.open('db/database.yml'))
 db_config_admin = db_config.merge({database: 'postgres', schema_search_path: 'public'})
 
 namespace :db do
