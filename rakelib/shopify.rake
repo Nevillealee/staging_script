@@ -69,3 +69,17 @@ namespace :productmetafield do
       ProductMetafieldAPI.db_to_stage
     end
 end
+
+namespace :page do
+  desc "saves active pages to db"
+  task :save_actives do
+    ActiveRecord::Base.establish_connection(db_config)
+     PageAPI.active_to_db
+   end
+
+  desc "pushes local pages to staging"
+  task :push_locals do
+   ActiveRecord::Base.establish_connection(db_config)
+    PageAPI.db_to_stage
+  end
+end

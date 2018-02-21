@@ -8,7 +8,8 @@ Dir['./modules/*.rb'].each { |file| require file }
 Dir['./models/*.rb'].each { |file| require file }
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for product metadata. (See rakelib dir)
+# and Elliestaging shopify sites for product metadata cloning 
+# from active to staging. (See rakelib dir)
 #
 # Examples
 #

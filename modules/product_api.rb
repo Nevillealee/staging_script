@@ -3,6 +3,13 @@ require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
 
+# Internal: Automate GET, POST, PUT requests to Ellie.com
+# and Elliestaging shopify sites for products cloning 
+# from active to staging. (See rakelib dir)
+#
+# Examples
+#
+#   $ rake product:save_stages
 module ProductAPI
   ACTIVE_PRODUCT = []
   STAGING_PRODUCT = []
@@ -145,7 +152,7 @@ def self.active_to_db
       product_id: prod.id,
       name: current_option['name'],
       position: current_option['position'],
-      values: current_option['values'], 
+      values: current_option['values'],
       images: current_option['images'],
       image: current_option['image'])
     end

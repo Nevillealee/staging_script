@@ -3,9 +3,13 @@ require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
 
-# automation suite tranfers data from active ellie
-# site, parses JSON responses, and POSTs to staging
-# ellie site for testing
+# Internal: Automate GET, POST, PUT requests to Ellie.com
+# and Elliestaging shopify sites for custom collection cloning
+# from active to staging. (See rakelib dir)
+#
+# Examples
+#
+#   $ rake customcollection:save_actives
 module CustomCollectionAPI
   ACTIVE_COLLECTION = []
   STAGING_COLLECTION = []

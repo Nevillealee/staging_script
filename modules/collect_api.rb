@@ -3,6 +3,13 @@ require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
 
+# Internal: Automate GET, POST, PUT requests to Ellie.com
+# and Elliestaging shopify sites for collects cloning 
+# from active to staging. (See rakelib dir)
+#
+# Examples
+#
+#   $ rake collect:push_locals
 module CollectAPI
   ACTIVE_COLLECT = []
 

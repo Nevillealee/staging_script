@@ -50,6 +50,18 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.index ["product_id"], name: "index_options_on_product_id"
   end
 
+  create_table "pages", force: :cascade do |t|
+    t.string "site_id"
+    t.string "title", null: false
+    t.string "shop_id"
+    t.string "handle"
+    t.string "body_html", default: ""
+    t.string "author"
+    t.string "template_suffix"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "product_metafields", force: :cascade do |t|
     t.string "namespace"
     t.string "key"
