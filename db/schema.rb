@@ -85,6 +85,7 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "tags", array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "image"
   end
 
   create_table "staging_collects", force: :cascade do |t|
@@ -123,6 +124,7 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "tags", array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "image"
   end
 
   create_table "variants", force: :cascade do |t|

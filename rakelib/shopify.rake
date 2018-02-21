@@ -20,6 +20,12 @@ namespace :product do
     ActiveRecord::Base.establish_connection(db_config)
      ProductAPI.stage_to_db
   end
+
+  desc "pushes active products directly to staging"
+  task :active_to_stage do
+    ActiveRecord::Base.establish_connection(db_config)
+     ProductAPI.active_to_stage
+  end
 end
 
 namespace :customcollection do

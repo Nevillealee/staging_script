@@ -8,7 +8,7 @@ Dir['./modules/*.rb'].each { |file| require file }
 Dir['./models/*.rb'].each { |file| require file }
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for product metadata cloning 
+# and Elliestaging shopify sites for product metadata cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -48,7 +48,6 @@ module ProductMetafieldAPI
     # namespace & that belong to a CustomCollection
     if current_meta[0].namespace != 'EWD_UFAQ' &&
       ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.site_id })
-    p "SAVE TO DB >>> #{x.site_id} = #{current_meta[0].namespace}, #{current_meta[0].key}, #{current_meta[0].value}"
     # save current validated metafield to db
     ProductMetafield.create(
     namespace: current_meta[0].namespace,
@@ -83,7 +82,7 @@ module ProductMetafieldAPI
     size = @metafields.size
     progressbar = ProgressBar.create(
     title: 'Progess',
-    starting_at: 1,
+    starting_at: 0,
     total: size,
     format: '%t: %p%%  |%B|')
     p 'pushing product_metafields to staging.. This may take several minutes...'

@@ -4,7 +4,7 @@ require 'shopify_api'
 require 'pp'
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for products cloning 
+# and Elliestaging shopify sites for products cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -71,6 +71,7 @@ module ProductAPI
 
   def self.stage_to_db
     initialize_stages
+    p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
       StagingProduct.create!(
@@ -83,7 +84,8 @@ module ProductAPI
       template_suffix: current['template_suffix'],
       published_scope: current['published_scope'],
       tags: current['tags'],
-      images: current['images'])
+      images: current['images'],
+      image: current['image'])
     end
     p 'staging products saved to db'
   end
@@ -96,14 +98,19 @@ def self.active_to_stage
   # of each active product to use as paramters for new
   # product objects created in POST request
   # to staging sight using ShopifyAPI gem
+
+  p 'transferring active products to staging...'
   ACTIVE_PRODUCT.each do |current|
+    shopify_api_throttle
     ShopifyAPI::Product.create!(
      title: current['title'],
      body_html: current['body_html'],
      vendor: current['vendor'],
      product_type: current['product_type'],
      variants: current['variants'],
-     options: current['options'])
+     options: current['options'],
+     images: current['images'],
+     image: current['image'])
   end
   # notify user of succesful method complete otherwise
   # exception would be thrown by ShopifyAPI::Product.create! method above

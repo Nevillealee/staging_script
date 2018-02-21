@@ -16,4 +16,9 @@ RSpec.describe Product, :type => :model do
       expect(Product.create(vendor: 'fam brands')).not_to be_valid
     end
   end
+
+  context 'after api call is made' do
+    it 'database should have valid products fields' do
+    end
+  end
 end
