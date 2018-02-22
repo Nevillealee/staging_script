@@ -72,7 +72,6 @@ GEM
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rake (12.3.0)
-    require_all (1.5.0)
     rspec (3.7.0)
       rspec-core (~> 3.7.0)
       rspec-expectations (~> 3.7.0)
@@ -109,14 +108,10 @@ DEPENDENCIES
   factory_bot
   httparty
   pg (~> 0.18.4)
-  require_all
   rspec
   ruby-progressbar (~> 1.9)
   shopify_api
   standalone_migrations
-
-RUBY VERSION
-   ruby 2.4.1p111
 
 BUNDLED WITH
    1.16.1

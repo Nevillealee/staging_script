@@ -1,7 +1,5 @@
 source "https://rubygems.org"
 
-ruby "2.4.1"
-gem 'require_all'
 gem 'dotenv'
 gem 'httparty'
 gem 'shopify_api'
@@ -13,6 +11,8 @@ gem 'standalone_migrations'
 gem 'pg', '~> 0.18.4'
 
 # test suite
-gem 'rspec'
-gem 'factory_bot'
-gem 'database_cleaner'
+group :test do
+  gem 'rspec'
+  gem 'factory_bot'
+  gem 'database_cleaner'
+end
