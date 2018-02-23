@@ -43,7 +43,7 @@ module ProductAPI
     ACTIVE_PRODUCT.flatten!
   end
 
-  def self.initialize_stages
+  def self.init_stages
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_product_count = ShopifyAPI::Product.count
@@ -70,7 +70,7 @@ module ProductAPI
   # primary use for cloning active collections
 
   def self.stage_to_db
-    initialize_stages
+    init_stages
     p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
@@ -104,9 +104,11 @@ def self.active_to_stage
     shopify_api_throttle
     ShopifyAPI::Product.create!(
      title: current['title'],
-     body_html: current['body_html'],
      vendor: current['vendor'],
+     body_html: current['body_html'],
+     handle: current['handle'],
      product_type: current['product_type'],
+     template_suffix: current['template_suffix'],
      variants: current['variants'],
      options: current['options'],
      images: current['images'],
@@ -165,5 +167,19 @@ def self.active_to_db
     end
   end
   p 'Active products saved succesfully'
+end
+
+def self.delete_all
+  ShopifyAPI::Base.site =
+    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    init_stages
+
+  # Loops hrough every product currently on
+  # ellie staging
+  STAGING_PRODUCT.each do |current|
+    shopify_api_throttle
+    ShopifyAPI::Product.delete(current['id'])
+  end
+  p 'staging products succesfully deleted'
 end
 end

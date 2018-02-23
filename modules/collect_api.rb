@@ -4,7 +4,7 @@ require 'shopify_api'
 require 'pp'
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for collects cloning 
+# and Elliestaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -37,7 +37,7 @@ module CollectAPI
       p "active collects set #{page} loaded, sleeping 3"
       sleep 3
     end
-    p 'active colects initialized'
+    p 'active collects initialized'
       # combine hash arrays from each page
       # into single collect array
     ACTIVE_COLLECT.flatten!

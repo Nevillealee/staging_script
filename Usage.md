@@ -22,6 +22,7 @@ staging 'collects'
   +staging_products
   +products
   +custom_collections
+  +collects
 
 active 'pages'
   no dependencies
