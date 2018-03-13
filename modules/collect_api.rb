@@ -12,6 +12,7 @@ require 'pp'
 #   $ rake collect:push_locals
 module CollectAPI
   ACTIVE_COLLECT = []
+  STAGING_COLLECT = []
 
   def self.shopify_api_throttle
     ShopifyAPI::Base.site =
@@ -41,6 +42,28 @@ module CollectAPI
       # combine hash arrays from each page
       # into single collect array
     ACTIVE_COLLECT.flatten!
+  end
+
+  def self.init_stages
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    staging_collect_count = ShopifyAPI::Collect.count
+    nb_pages = (staging_collect_count / 250.0).ceil
+
+    # Initalize @STAGING_PRODUCT with all staging products from elliestaging
+    1.upto(nb_pages) do |page| # throttling conditon
+      ellie_staging_url =
+        "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
+      @parsed_response = HTTParty.get(ellie_staging_url)
+      # appends each product hash to STAGING_PRODUCT array
+      STAGING_COLLECT.push(@parsed_response['collects'])
+      p "staging collects set #{page} loaded, sleeping 3"
+      sleep 3
+    end
+    p 'staging collects initialized'
+    # combine hash arrays from each page
+    # into single product array
+    STAGING_COLLECT.flatten!
   end
 
   def self.active_to_db
@@ -81,5 +104,17 @@ module CollectAPI
         collection_id: current['new_cc_id'])
     end
     p 'local collects successfully pushed to staging'
+  end
+
+  def self.delete_all
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      init_stages
+    p 'deleting products...'
+    STAGING_COLLECT.each do |current|
+      shopify_api_throttle
+      ShopifyAPI::Collect.delete(current['id'])
+    end
+    p 'staging collects succesfully deleted'
   end
 end

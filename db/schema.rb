@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180209220619) do
+ActiveRecord::Schema.define(version: 201821151701) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -131,9 +131,9 @@ ActiveRecord::Schema.define(version: 20180209220619) do
     t.string "title"
     t.string "site_id"
     t.string "option1", null: false
-    t.string "sku"
+    t.string "sku", default: ""
     t.string "price"
-    t.string "barcode"
+    t.string "barcode", default: ""
     t.boolean "compare_at_price"
     t.string "fulfillment_service"
     t.bigint "grams"

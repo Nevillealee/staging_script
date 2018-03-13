@@ -117,4 +117,16 @@ module CustomCollectionAPI
     end
     p 'Custom Collections saved succesfully'
   end
+
+  def self.delete_all
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      init_stages
+    p 'deleting Custom Collections...'
+    STAGING_COLLECTION.each do |current|
+      shopify_api_throttle
+      ShopifyAPI::CustomCollection.delete(current['id'])
+    end
+    p 'staging custom collections succesfully deleted'
+  end
 end

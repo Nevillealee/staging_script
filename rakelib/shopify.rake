@@ -16,9 +16,20 @@ namespace :staging do
     'customcollection:save_actives',
     'customcollection:save_stages',
     'collect:save_actives',
-    'collect:push_locals',
+    'collect:push_locals'
     ] do
     p 'staging products successfully linked to staging custom collections'
+  end
+end
+
+namespace :destroy do
+  desc "deletes ALL products, custom_collections and collects from STAGING"
+  task :staging =>
+  ['product:delete',
+  'customcollection:delete',
+  'collect:delete'
+  ] do
+    p 'staging successfully wiped clean'
   end
 end
 
@@ -39,6 +50,12 @@ namespace :product do
   task :active_to_stage do
     ActiveRecord::Base.establish_connection(db_config)
      ProductAPI.active_to_stage
+  end
+
+  desc "pushes active products from db to staging"
+  task :db_to_stage do
+    ActiveRecord::Base.establish_connection(db_config)
+     ProductAPI.db_to_stage
   end
 
   desc "deletes all staging products"
@@ -66,6 +83,12 @@ namespace :customcollection do
     ActiveRecord::Base.establish_connection(db_config)
      CustomCollectionAPI.stage_to_db
   end
+
+  desc "deletes all staging custom collections"
+  task :delete do
+    ActiveRecord::Base.establish_connection(db_config)
+    CustomCollectionAPI.delete_all
+  end
 end
 
 namespace :collect do
@@ -79,6 +102,12 @@ namespace :collect do
   task :push_locals do
     ActiveRecord::Base.establish_connection(db_config)
      CollectAPI.db_to_stage
+  end
+
+  desc "deletes all staging collects"
+  task :delete do
+    ActiveRecord::Base.establish_connection(db_config)
+    CollectAPI.delete_all
   end
 end
 

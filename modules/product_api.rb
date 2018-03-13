@@ -74,18 +74,18 @@ module ProductAPI
     p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
-      StagingProduct.create!(
-      title: current['title'],
-      body_html: current['body_html'],
-      vendor: current['vendor'],
-      product_type: current['product_type'],
-      handle: current['handle'],
-      site_id: current['id'], # product id from ellie active
-      template_suffix: current['template_suffix'],
-      published_scope: current['published_scope'],
-      tags: current['tags'],
-      images: current['images'],
-      image: current['image'])
+        grshopify_api_throttle
+        StagingProduct.create!(
+        title: current['title'],
+        body_html: current['body_html'],
+        vendor: current['vendor'],
+        product_type: current['product_type'],
+        handle: current['handle'],
+        template_suffix: current['template_suffix'] || '',
+        published_scope: current['published_scope'],
+        tags: current['tags'],
+        images: current['images'],
+        image: current['image'])
     end
     p 'staging products saved to db'
   end
@@ -102,13 +102,14 @@ def self.active_to_stage
   p 'transferring active products to staging...'
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
+    # p current['title']
     ShopifyAPI::Product.create!(
      title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'],
      handle: current['handle'],
      product_type: current['product_type'],
-     template_suffix: current['template_suffix'],
+     template_suffix: current['template_suffix'] || "",
      variants: current['variants'],
      options: current['options'],
      images: current['images'],
@@ -117,6 +118,41 @@ def self.active_to_stage
   # notify user of succesful method complete otherwise
   # exception would be thrown by ShopifyAPI::Product.create! method above
   p 'transfer complete'
+end
+
+def self.db_to_stage
+  ShopifyAPI::Base.site =
+    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+  # grabs title of each product to use as paramter for new
+  # custom collection object created in POST request
+  # to staging sight using ShopifyAPI gem
+  product = Product.all
+  p 'pushing products to shopify...'
+  product.each do |current|
+    shopify_api_throttle
+    ShopifyAPI::Product.create!(
+     title: current['title'],
+     vendor: current['vendor'],
+     body_html: current['body_html'],
+     handle: current['handle'],
+     product_type: current['product_type'],
+     template_suffix: current['template_suffix'] || "",
+     variants: current.variants.each do |v|
+       title: v['title'],
+       option1: v['option1'],
+       sku: v['sku'],
+       price: v['price'],
+       barcode: v['barcode'],
+       compare_at_price: v['compare_at_price'],
+       fulfillment_service: v['fulfillment_service'],
+       grams: v['grams'],
+       image_id: v['image_id'])
+     end,
+     options: current.options.all,
+     images: current['images'],
+     image: current['image'])
+     p "saved  #{current['title']}"
+  end
 end
 
 # pulls active product data from shopify api and saves to
@@ -173,9 +209,7 @@ def self.delete_all
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     init_stages
-
-  # Loops hrough every product currently on
-  # ellie staging
+  p 'deleting products...'
   STAGING_PRODUCT.each do |current|
     shopify_api_throttle
     ShopifyAPI::Product.delete(current['id'])
