@@ -86,7 +86,7 @@ module ProductMetafieldAPI
     total: size,
     format: '%t: %p%%  |%B|')
     p 'pushing product_metafields to staging.. This may take several minutes...'
-
+     p @metafields[1]
     @metafields.each do |current|
       shopify_api_throttle
       myprod = ShopifyAPI::Product.find(current.staging_product_id)

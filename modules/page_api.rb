@@ -47,7 +47,7 @@ module PageAPI
   def self.active_to_db
     init_actives
     ACTIVE_PAGE.each do |current|
-      Page.create!(
+      Page.create(
         site_id: current['site_id'],
         shop_id: current['shop_id'], # store id
         title: current['title'],
@@ -64,7 +64,7 @@ module PageAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     @pages = Page.all
     # creates progress bar because of long method run time
-    size = @page.size
+    size = @pages.size
     progressbar = ProgressBar.create(
     title: 'Progess',
     starting_at: 1,
@@ -74,7 +74,7 @@ module PageAPI
 
     @pages.each do |current|
       shopify_api_throttle
-      ShopifyAPI::Page.create!(
+      ShopifyAPI::Page.create(
       title: current.title,
       body_html: current.body_html,
       author: current.author,

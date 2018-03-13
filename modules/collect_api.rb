@@ -50,7 +50,7 @@ module CollectAPI
     staging_collect_count = ShopifyAPI::Collect.count
     nb_pages = (staging_collect_count / 250.0).ceil
 
-    # Initalize @STAGING_PRODUCT with all staging products from elliestaging
+    # Initalize @STAGING_COLLECT with all staging products from elliestaging
     1.upto(nb_pages) do |page| # throttling conditon
       ellie_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
@@ -84,7 +84,7 @@ module CollectAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     # creates an array of active(old) and staging(new)
     # product/custom collection ids objects matched by handle
-    @collect_matches = StagingCollect.find_by_sql(
+    @collect_matches = Collect.find_by_sql(
       "SELECT scc.site_id as new_cc_id,
        scc.handle as custom_collection_handle, cc.site_id as old_cc_id,
        sp.site_id as new_p_id,

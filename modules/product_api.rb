@@ -15,11 +15,12 @@ module ProductAPI
   STAGING_PRODUCT = []
 
   def self.shopify_api_throttle
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
-    puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
-    puts 'SLEEPING 10'
     sleep 10
   end
+
 
   def self.init_actives
     ShopifyAPI::Base.site =
@@ -74,9 +75,9 @@ module ProductAPI
     p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
-        grshopify_api_throttle
-        StagingProduct.create!(
+        StagingProduct.create(
         title: current['title'],
+        site_id: current['id'],
         body_html: current['body_html'],
         vendor: current['vendor'],
         product_type: current['product_type'],
@@ -101,9 +102,10 @@ def self.active_to_stage
 
   p 'transferring active products to staging...'
   ACTIVE_PRODUCT.each do |current|
-    shopify_api_throttle
+    ProductAPI.shopify_api_throttle
     # p current['title']
-    ShopifyAPI::Product.create!(
+    begin
+    ShopifyAPI::Product.create(
      title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'],
@@ -114,6 +116,10 @@ def self.active_to_stage
      options: current['options'],
      images: current['images'],
      image: current['image'])
+   rescue
+     p "error with #{current['title']}"
+     next
+   end
   end
   # notify user of succesful method complete otherwise
   # exception would be thrown by ShopifyAPI::Product.create! method above
@@ -137,20 +143,10 @@ def self.db_to_stage
      handle: current['handle'],
      product_type: current['product_type'],
      template_suffix: current['template_suffix'] || "",
-     variants: current.variants.each do |v|
-       title: v['title'],
-       option1: v['option1'],
-       sku: v['sku'],
-       price: v['price'],
-       barcode: v['barcode'],
-       compare_at_price: v['compare_at_price'],
-       fulfillment_service: v['fulfillment_service'],
-       grams: v['grams'],
-       image_id: v['image_id'])
-     end,
-     options: current.options.all,
-     images: current['images'],
-     image: current['image'])
+     variants: current.variants.as_json,
+     options: current.options.as_json,
+     images: current['images'] || "",
+     image: current['image'] || "")
      p "saved  #{current['title']}"
   end
 end
