@@ -16,3 +16,7 @@ group :test do
   gem 'factory_bot'
   gem 'database_cleaner'
 end
+
+group :development, :test do
+  gem 'pry'
+end

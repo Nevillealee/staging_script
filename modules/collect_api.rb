@@ -43,7 +43,7 @@ module CollectAPI
       # into single collect array
     ACTIVE_COLLECT.flatten!
   end
-
+  
   def self.init_stages
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"

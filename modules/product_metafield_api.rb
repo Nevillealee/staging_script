@@ -43,9 +43,7 @@ module ProductMetafieldAPI
      { resource: 'products',
        resource_id: x.site_id,
        fields: 'namespace, key, value' })
-    if !current_meta.nil? && current_meta[0] # TODO(Neville Lee): Verify what to do with products with no metafield
-    # saves metafields for products with valid
-    # namespace & that belong to a CustomCollection
+    if !current_meta.nil? && current_meta[0]
     if current_meta[0].namespace != 'EWD_UFAQ' &&
       ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.site_id })
     # save current validated metafield to db
@@ -78,6 +76,7 @@ module ProductMetafieldAPI
        sp.site_id as staging_product_id FROM product_metafields
        INNER JOIN products p ON product_metafields.owner_id = p.site_id
        INNER JOIN staging_products sp ON p.title = sp.title;')
+       pp @metafields.count
     # creates progress bar because of long method run time
     size = @metafields.size
     progressbar = ProgressBar.create(
@@ -86,8 +85,8 @@ module ProductMetafieldAPI
     total: size,
     format: '%t: %p%%  |%B|')
     p 'pushing product_metafields to staging.. This may take several minutes...'
-     p @metafields[1]
     @metafields.each do |current|
+      begin
       shopify_api_throttle
       myprod = ShopifyAPI::Product.find(current.staging_product_id)
       myprod.add_metafield(ShopifyAPI::Metafield.new(
@@ -97,6 +96,10 @@ module ProductMetafieldAPI
       value_type: 'string' ))
       myprod.save
       progressbar.increment
+    rescue
+      
+      next
+    end
     end
     p 'product_metafields successfully pushed to staging'
   end
