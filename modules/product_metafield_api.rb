@@ -87,7 +87,7 @@ module ProductMetafieldAPI
     p 'pushing product_metafields to staging.. This may take several minutes...'
     @metafields.each do |current|
       begin
-      shopify_api_throttle
+      ProductMetafieldAPI.shopify_api_throttle
       myprod = ShopifyAPI::Product.find(current.staging_product_id)
       myprod.add_metafield(ShopifyAPI::Metafield.new(
       namespace: current.namespace,
@@ -97,7 +97,7 @@ module ProductMetafieldAPI
       myprod.save
       progressbar.increment
     rescue
-      
+
       next
     end
     end
