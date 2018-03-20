@@ -10,10 +10,40 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 201821151701) do
+ActiveRecord::Schema.define(version: 20180320145610) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "articles", id: :bigint, default: nil, force: :cascade do |t|
+    t.string "title"
+    t.bigint "blog_id"
+    t.string "author"
+    t.string "body_html"
+    t.string "handle"
+    t.jsonb "image"
+    t.boolean "published"
+    t.string "tags"
+    t.string "template_suffix"
+    t.bigint "user_id"
+    t.datetime "updated_at"
+    t.datetime "created_at"
+    t.string "summary_html"
+    t.datetime "published_at"
+    t.jsonb "metafields"
+  end
+
+  create_table "blogs", id: :bigint, default: nil, force: :cascade do |t|
+    t.string "title"
+    t.string "handle"
+    t.string "commentable"
+    t.string "feedburner"
+    t.string "feedburner_location"
+    t.string "template_suffix"
+    t.string "tags"
+    t.datetime "updated_at"
+    t.datetime "created_at"
+  end
 
   create_table "collects", force: :cascade do |t|
     t.string "collection_id"
@@ -86,6 +116,18 @@ ActiveRecord::Schema.define(version: 201821151701) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.jsonb "image"
+  end
+
+  create_table "staging_blogs", id: :bigint, default: nil, force: :cascade do |t|
+    t.string "title"
+    t.string "handle"
+    t.string "commentable"
+    t.string "feedburner"
+    t.string "feedburner_location"
+    t.string "template_suffix"
+    t.string "tags"
+    t.datetime "updated_at"
+    t.datetime "created_at"
   end
 
   create_table "staging_collects", force: :cascade do |t|

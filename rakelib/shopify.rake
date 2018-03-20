@@ -143,3 +143,31 @@ namespace :page do
     PageAPI.db_to_stage
   end
 end
+
+namespace :blog do
+  desc 'GET request for ellie.com blogs'
+  task :save_actives do
+    ActiveRecord::Base.establish_connection(db_config)
+      BlogAPI.active_to_db
+  end
+
+  desc 'GET request for elliestaging blogs'
+  task :save_stages do
+    ActiveRecord::Base.establish_connection(db_config)
+      BlogAPI.stage_to_db
+  end
+
+  desc 'POST request for elliestaging.com blogs'
+  task :push_locals do
+    ActiveRecord::Base.establish_connection(db_config)
+      BlogAPI.db_to_stage
+  end
+end
+
+namespace :article do
+  desc 'GET request for ellie.com articles'
+  task :save_actives do
+    ActiveRecord::Base.establish_connection(db_config)
+      ArticleAPI.active_to_db
+  end
+end
