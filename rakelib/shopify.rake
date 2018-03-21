@@ -170,4 +170,10 @@ namespace :article do
     ActiveRecord::Base.establish_connection(db_config)
       ArticleAPI.active_to_db
   end
+
+  desc 'POST request for elliestaging articles'
+  task :push_locals do
+    ActiveRecord::Base.establish_connection(db_config)
+      ArticleAPI.db_to_stage
+  end
 end

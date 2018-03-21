@@ -2,12 +2,16 @@ require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
+require 'active_record'
+Dir['./modules/*.rb'].each { |file| require file }
+Dir['./models/*.rb'].each { |file| require file }
 
 module ArticleAPI
-  def self.api_throttle
+  def self.shopify_api_throttle
     ShopifyAPI::Base.site =
-      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
+    p 'api limit reached, sleeping 10'
     sleep 10
   end
 
@@ -27,10 +31,30 @@ module ArticleAPI
   end
 
   def self.db_to_stage
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    staging_blog_ids = ShopifyAPI::Blog.all(params: {fields: 'id'})
-    p 'pushing blogs to ellie staging...'
+    @staging_articles = Article.find_by_sql(
+      "SELECT articles.*, sb.id as staging_blog_id,
+      sb.title as staging_blog_title,
+      b.title as blog_title from articles
+      INNER JOIN blogs b ON articles.blog_id = b.id
+      INNER JOIN staging_blogs sb ON sb.title = b.title;")
 
+      p 'staging_articles initialized...'
+      @staging_articles.each do |current|
+        shopify_api_throttle
+        auth = {:username => ENV['STAGING_API_KEY'], :password => ENV['STAGING_API_PW'] }
+        HTTParty.post("https://elliestaging.myshopify.com/admin/blogs/#{current['staging_blog_id']}/articles.json",
+          body: { article: {
+            title: current['title'],
+            author: current['author'],
+            body_html: current['body_html'],
+            tags: current['tags'],
+            summary_html: current['summary_html'],
+            handle: current['handle'],
+            image: current['image']
+            } }.to_json, headers: { 'Content-Type' => 'application/json' },
+          basic_auth: auth )
+          p "pushed #{current['title']}"
+      end
+    p 'successfully pushed articles to ellie staging...'
   end
 end
