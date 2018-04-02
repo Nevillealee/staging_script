@@ -50,7 +50,10 @@ module ArticleAPI
             tags: current['tags'],
             summary_html: current['summary_html'],
             handle: current['handle'],
-            image: current['image']
+            image: current['image'],
+            published_at: current['published_at'],
+            published: current['published'],
+            template_suffix: current['template_suffix']
             } }.to_json, headers: { 'Content-Type' => 'application/json' },
           basic_auth: auth )
           p "pushed #{current['title']}"

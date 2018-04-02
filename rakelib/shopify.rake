@@ -37,6 +37,10 @@ namespace :product do
   desc "saves active product api response"
   task :save_actives do
     ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.connection.execute(
+      "TRUNCATE options,
+      variants, products
+      RESTART IDENTITY;")
      ProductAPI.active_to_db
   end
 

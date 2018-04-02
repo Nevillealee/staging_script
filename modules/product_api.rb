@@ -92,7 +92,7 @@ module ProductAPI
   end
 
 def self.active_to_stage
-  init_actives 
+  init_actives
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
   # grabs title, body_html, vendor, product_type, and variants
