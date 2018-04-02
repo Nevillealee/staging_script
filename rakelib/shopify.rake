@@ -62,6 +62,12 @@ namespace :product do
      ProductAPI.db_to_stage
   end
 
+  desc "update staging products from db"
+  task :update_stages do
+    ActiveRecord::Base.establish_connection(db_config)
+     ProductAPI.stage_update
+  end
+
   desc "deletes all staging products"
   task :delete do
     ActiveRecord::Base.establish_connection(db_config)
@@ -170,7 +176,7 @@ end
 
 namespace :article do
   desc 'GET request for ellie.com articles'
-  task :save_actives do
+  task :save_actives  => ['blog:save_actives'] do
     ActiveRecord::Base.establish_connection(db_config)
       ArticleAPI.active_to_db
   end
