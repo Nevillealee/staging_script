@@ -179,18 +179,18 @@ def self.stage_update
   starting_at: 0,
   total: size,
   format: '%t: %p%%  |%B|')
-    # ACTIVE_PRODUCT array of hashes
-    ACTIVE_PRODUCT.each do |current|
-      shopify_api_throttle
-      prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
-      if (prod && prod.images)
-        prod.images = current['images']
-        prod.image = current['image']
-        prod.save
-      puts "updated #{prod.title}'s images"
-      end
-      progressbar.increment
+  # ACTIVE_PRODUCT array of hashes
+  ACTIVE_PRODUCT.each do |current|
+    shopify_api_throttle
+    prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
+    if (prod && prod.images)
+      prod.images = current['images']
+      prod.image = current['image']
+      prod.save
+    puts "updated #{prod.title}'s images"
     end
+    progressbar.increment
+  end
   p "Process complete.."
 end
 
