@@ -39,8 +39,7 @@ module PageAPI
       sleep 3
     end
     p 'active pages initialized'
-      # combine hash arrays from each page
-      # into single pages array
+
     ACTIVE_PAGE.flatten!
   end
 

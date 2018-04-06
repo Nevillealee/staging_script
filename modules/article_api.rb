@@ -19,8 +19,8 @@ module ArticleAPI
     ShopifyAPI::Base.site =
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     @current_blogs = Blog.all
+
     @current_blogs.each do |current|
-      # save current article to db
       articles = ShopifyAPI::Article.find(:all, blog_id: current.id )
       articles.each do |art|
         Article.find_or_initialize_by(id: art.id).update(art.attributes)
@@ -37,8 +37,9 @@ module ArticleAPI
       b.title as blog_title from articles
       INNER JOIN blogs b ON articles.blog_id = b.id
       INNER JOIN staging_blogs sb ON sb.title = b.title;")
-
+      
       p 'staging_articles initialized...'
+
       @staging_articles.each do |current|
         shopify_api_throttle
         auth = {:username => ENV['STAGING_API_KEY'], :password => ENV['STAGING_API_PW'] }

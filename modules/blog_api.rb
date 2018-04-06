@@ -19,7 +19,6 @@ module BlogAPI
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_blog_count = ShopifyAPI::Blog.count
     nb_pages = (active_blog_count / 250.0).ceil
-
     # Initalize ACTIVE_BLOG with all active blogs from Ellie.com
     1.upto(nb_pages) do |page| # throttling conditon
       ellie_active_url =
@@ -31,8 +30,7 @@ module BlogAPI
       sleep 3
     end
     p 'active blogs initialized'
-    # combine hash arrays from each page
-    # into single product array
+
     ACTIVE_BLOG.flatten!
   end
 
@@ -41,7 +39,6 @@ module BlogAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_blog_count = ShopifyAPI::Blog.count
     nb_pages = (staging_blog_count / 250.0).ceil
-
     # Initalize STAGING_BLOG with all staging blogs from elliestaging.myshopify.com
     1.upto(nb_pages) do |page| # throttling conditon
       ellie_staging_url =
@@ -53,8 +50,7 @@ module BlogAPI
       sleep 3
     end
     p 'staging blogs initialized'
-    # combine hash arrays from each page
-    # into single product array
+
     STAGING_BLOG.flatten!
   end
 

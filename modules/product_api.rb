@@ -21,7 +21,6 @@ module ProductAPI
     sleep 10
   end
 
-
   def self.init_actives
     ShopifyAPI::Base.site =
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
@@ -33,14 +32,13 @@ module ProductAPI
       ellie_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
       @parsed_response = HTTParty.get(ellie_active_url)
-      # appends each product hash to ACTIVE_PRODUCT array
+
       ACTIVE_PRODUCT.push(@parsed_response['products'])
       p "active products set #{page} loaded, sleeping 3"
       sleep 3
     end
     p 'active products initialized'
-    # combine hash arrays from each page
-    # into single product array
+
     ACTIVE_PRODUCT.flatten!
   end
 
@@ -55,14 +53,11 @@ module ProductAPI
       ellie_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
       @parsed_response = HTTParty.get(ellie_staging_url)
-      # appends each product hash to STAGING_PRODUCT array
       STAGING_PRODUCT.push(@parsed_response['products'])
       p "staging products set #{page} loaded, sleeping 3"
       sleep 3
     end
     p 'staging products initialized'
-    # combine hash arrays from each page
-    # into single product array
     STAGING_PRODUCT.flatten!
   end
 
@@ -217,8 +212,7 @@ def self.active_to_db
     published_scope: current['published_scope'],
     tags: current['tags'],
     images: current['images'])
-    # iterate through each nested variant array
-    # inside each product for deep clone
+
     current['variants'].each do |current_variant|
       Variant.create!(
       site_id: current_variant['product_id'], # ID OF LINKED PRODUCT ON ellie ative

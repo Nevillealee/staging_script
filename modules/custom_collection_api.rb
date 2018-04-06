@@ -2,7 +2,6 @@ require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
-
 # Internal: Automate GET, POST, PUT requests to Ellie.com
 # and Elliestaging shopify sites for custom collection cloning
 # from active to staging. (See rakelib dir)
@@ -38,8 +37,7 @@ module CustomCollectionAPI
       sleep 3
     end
     p 'active custom collections initialized'
-    # combine hash arrays from each page
-    # into single product array
+
     ACTIVE_COLLECTION.flatten!
   end
 
@@ -48,7 +46,6 @@ module CustomCollectionAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_custom_collection_count = ShopifyAPI::CustomCollection.count
     nb_pages = (staging_custom_collection_count / 250.0).ceil
-
     # Initalize STAGING_COLLECTION with all staging
     # custom collections from elliestaging
     1.upto(nb_pages) do |page|
@@ -61,14 +58,11 @@ module CustomCollectionAPI
       sleep 3
     end
     p 'staging custom collections initialized'
-    # combine hash arrays from each page
-    # into single product array
     STAGING_COLLECTION.flatten!
   end
 
   def self.stage_to_db
     init_stages
-
     STAGING_COLLECTION.each do |current|
       StagingCustomCollection.create!(
       site_id: current['id'],
@@ -85,9 +79,7 @@ module CustomCollectionAPI
   def self.db_to_stage
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    # grabs title of each custom collection to use as paramter for new
-    # custom collection object created in POST request
-    # to staging sight using ShopifyAPI gem
+
     cc = CustomCollection.all
     p 'Pushing local Custom Collections to staging...'
     cc.each do |current|
@@ -104,7 +96,6 @@ module CustomCollectionAPI
 
   def self.active_to_db
     init_actives
-
     ACTIVE_COLLECTION.each do |current|
       CustomCollection.create!(
       site_id: current['id'],
