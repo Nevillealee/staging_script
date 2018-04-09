@@ -189,10 +189,10 @@ namespace :article do
 end
 
 namespace :yotpos do
-  desc 'save yotpos csv into local db'
-  task :import do
+  desc 'pass in name of source csv (without ext) as an arguement'
+  task :import, :csv_name do |t, args|
     ActiveRecord::Base.establish_connection(db_config)
-      YotposAPI.import
+      YotposAPI.import(args.csv_name)
   end
 
   desc 'tests join statement output AR'

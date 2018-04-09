@@ -7,11 +7,14 @@ Dir['./models/*.rb'].each { |file| require file }
 
 module YotposAPI
   # TODO(Neville Lee): change COPY [filename] before putting on AWS
-  def self.import
+  def self.import(filename)
+    ActiveRecord::Base.connection.execute(
+      "Truncate yotpos;"
+    )
     ActiveRecord::Base.connection.execute(
       "COPY yotpos
       FROM
-      '/home/neville/Desktop/fam_brands/staging_app/csv/yotpo_march.csv'
+      '/home/neville/Desktop/fam_brands/staging_app/csv/#{filename}.csv'
       DELIMITER ','
       CSV HEADER;"
     )
@@ -19,28 +22,21 @@ module YotposAPI
   end
 
   def self.convert_id
-    stage = StagingProduct.all
-    stagingIds = StagingProduct.find_by_sql(
-      "SELECT
-      staging_products.*,
-      yotpos.*
-      FROM
-      yotpos
-      INNER JOIN
-      staging_products
-      ON
-      yotpos.product_title = staging_products.title;"
-    )
-    stagingIds.each do |matchedSp|
-      yot = Yotpo.find_by(product_title: matchedSp['title'])
-      yot['product_id'] = matchedSp['site_id']
-      yot.save!
-      puts "updated #{yot['product_title']}"
+    yot = Yotpo.all
+    yot.each do |current_yot|
+      sp = StagingProduct.find_by(title: current_yot['product_title'])
+      if sp
+        current_yot['product_id'] = sp['site_id']
+        current_yot.save!
+        puts "updated #{current_yot['product_title']} => #{current_yot['product_id']}"
+      else
+        puts "No match for #{current_yot['product_title']} on ellie staging.."
+      end
     end
   end
 
   def self.export
-      CSV.open("/home/neville/Desktop/fam_brands/staging_app/csv/newCsv.csv", "wb") do |csv|
+      CSV.open("/home/neville/Desktop/fam_brands/staging_app/csv/staging_yotpo.csv", "wb") do |csv|
         csv << Yotpo.attribute_names
         Yotpo.all.each do |user|
           csv << user.attributes.values
