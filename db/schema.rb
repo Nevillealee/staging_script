@@ -189,7 +189,8 @@ ActiveRecord::Schema.define(version: 20180320145610) do
     t.index ["product_id"], name: "index_variants_on_product_id"
   end
 
-  create_table "yotpos", id: :bigint, default: nil, force: :cascade do |t|
+  create_table "yotpos", id: false, force: :cascade do |t|
+    t.bigint "id", null: false
     t.string "user_type"
     t.string "appkey"
     t.boolean "published"

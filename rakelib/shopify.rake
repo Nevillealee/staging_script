@@ -187,3 +187,23 @@ namespace :article do
       ArticleAPI.db_to_stage
   end
 end
+
+namespace :yotpos do
+  desc 'save yotpos csv into local db'
+  task :import do
+    ActiveRecord::Base.establish_connection(db_config)
+      YotposAPI.import
+  end
+
+  desc 'tests join statement output AR'
+  task :convert do
+    ActiveRecord::Base.establish_connection(db_config)
+      YotposAPI.convert_id
+  end
+
+  desc 'exports YOTPO csv'
+  task :export do
+    ActiveRecord::Base.establish_connection(db_config)
+      YotposAPI.export
+  end
+end
