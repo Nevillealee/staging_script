@@ -190,20 +190,26 @@ end
 
 namespace :yotpos do
   desc 'pass in name of source csv (without ext) as an arguement'
-  task :import, :csv_name do |t, args|
+  task :import_reviews, :csv_name do |t, args|
     ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.import(args.csv_name)
   end
 
-  desc 'tests join statement output AR'
+  desc 'converts product ids from active to staging values'
   task :convert do
     ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.convert_id
   end
 
-  desc 'exports YOTPO csv'
-  task :export do
+  desc 'exports YOTPO review csv'
+  task :export_reviews do
     ActiveRecord::Base.establish_connection(db_config)
-      YotposAPI.export
+      YotposAPI.export_reviews
+  end
+
+  desc 'exports YOTPO products import csv'
+  task :export_products do
+    ActiveRecord::Base.establish_connection(db_config)
+      YotposAPI.export_products
   end
 end
