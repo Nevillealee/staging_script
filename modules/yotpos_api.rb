@@ -38,7 +38,7 @@ module YotposAPI
   end
 
   def self.export_reviews
-    time = Time.now.strftime("%b%d%Y")
+    time = Time.now.strftime("%b%d%Y_%I%M")
       CSV.open("/home/neville/Desktop/fam_brands/staging_app/csv/yotpo_reviews_#{time}.csv", "wb") do |csv|
         csv << Yotpo.attribute_names
         Yotpo.all.each do |user|
@@ -70,23 +70,23 @@ module YotposAPI
         "Product Group"
        ]
        StagingProduct.all.each do |product|
-         product.images[0] ?  img_url = product.images[0]['src'] : img_url = "N/A"
+         product.images[0] ?  img_url = product.images[0]['src'] : img_url = ""
          csv << [
            "#{product.site_id}",
            "#{product.title}",
-           "N/A",
+           "",
            "#{product_url}#{product.handle}",
            "#{img_url}",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
-           "N/A",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
+           "",
          ]
        end
     end

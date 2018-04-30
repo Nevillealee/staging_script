@@ -17,7 +17,7 @@ module ProductAPI
   def self.shopify_api_throttle
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    return if ShopifyAPI.credit_left > 5
+      return if ShopifyAPI.credit_left > 5
     sleep 10
   end
 
@@ -136,22 +136,31 @@ def self.db_to_stage
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
 
-  product = Product.all
+  product = Product.find_by_sql(
+    "SELECT products.* from products
+    LEFT JOIN staging_products
+    ON products.handle = staging_products.handle
+    WHERE staging_products.handle is null;")
+
   p 'pushing products to shopify...'
   product.each do |current|
     shopify_api_throttle
-    ShopifyAPI::Product.create!(
+    begin
+    ShopifyAPI::Product.create(
      title: current['title'],
      vendor: current['vendor'],
-     body_html: current['body_html'],
+     body_html: current['body_html'] || "",
      handle: current['handle'],
-     product_type: current['product_type'],
+     product_type: current['product_type'] || "",
      template_suffix: current['template_suffix'] || "",
-     variants: current.variants.as_json,
-     options: current.options.as_json,
+     variants: current.variants || "",
+     options: current.options || "",
      images: current['images'] || "",
      image: current['image'] || "")
      p "saved  #{current['title']}"
+   rescue
+     p "error with #{current['title']}"
+   end
   end
 end
 
@@ -202,17 +211,17 @@ def self.active_to_db
 
   ACTIVE_PRODUCT.each do |current|
     prod = Product.create!(
-    title: current['title'],
-    body_html: current['body_html'],
-    vendor: current['vendor'],
-    product_type: current['product_type'],
-    handle: current['handle'],
-    site_id: current['id'], # product id from ellie active
-    template_suffix: current['template_suffix'],
-    published_scope: current['published_scope'],
-    tags: current['tags'],
-    images: current['images'])
-
+      title: current['title'],
+      body_html: current['body_html'],
+      vendor: current['vendor'],
+      product_type: current['product_type'],
+      handle: current['handle'],
+      site_id: current['id'], # product id from ellie active
+      template_suffix: current['template_suffix'],
+      published_scope: current['published_scope'],
+      tags: current['tags'],
+      images: current['images'],
+      image: current['image'])
     current['variants'].each do |current_variant|
       Variant.create!(
       site_id: current_variant['product_id'], # ID OF LINKED PRODUCT ON ellie ative

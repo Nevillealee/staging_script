@@ -41,12 +41,20 @@ namespace :product do
       "TRUNCATE options,
       variants, products
       RESTART IDENTITY;")
+      ActiveRecord::Base.connection.execute("ALTER SEQUENCE products_id_seq RESTART WITH 1;")
+      ActiveRecord::Base.connection.execute("ALTER SEQUENCE variants_id_seq RESTART WITH 1;")
+      ActiveRecord::Base.connection.execute("ALTER SEQUENCE options_id_seq RESTART WITH 1;")
      ProductAPI.active_to_db
   end
 
   desc "saves staging products to db"
   task :save_stages do
     ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.connection.execute(
+      "TRUNCATE staging_products
+      RESTART IDENTITY;")
+    ActiveRecord::Base.connection.execute("ALTER SEQUENCE staging_products_id_seq RESTART WITH 1;")
+      puts "staging_product table truncated"
      ProductAPI.stage_to_db
   end
 
@@ -154,16 +162,20 @@ namespace :page do
   end
 end
 
+# To update blogs, run save_actives, push_locals, save_stages, article:save_actives
+# and finally article:push_locals
 namespace :blog do
   desc 'GET request for ellie.com blogs'
   task :save_actives do
     ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.connection.execute("TRUNCATE blogs;")
       BlogAPI.active_to_db
   end
 
   desc 'GET request for elliestaging blogs'
   task :save_stages do
     ActiveRecord::Base.establish_connection(db_config)
+    ActiveRecord::Base.connection.execute("TRUNCATE staging_blogs;")
       BlogAPI.stage_to_db
   end
 
@@ -178,7 +190,8 @@ namespace :article do
   desc 'GET request for ellie.com articles'
   task :save_actives  => ['blog:save_actives'] do
     ActiveRecord::Base.establish_connection(db_config)
-      ArticleAPI.active_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE articles;")
+    ArticleAPI.active_to_db
   end
 
   desc 'POST request for elliestaging articles'
