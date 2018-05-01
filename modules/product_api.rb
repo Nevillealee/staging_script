@@ -40,8 +40,9 @@ module ProductAPI
     p 'active products initialized'
 
     ACTIVE_PRODUCT.flatten!
-  end
+    pp ACTIVE_PRODUCT[0]
 
+  end
   def self.init_stages
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
@@ -64,12 +65,12 @@ module ProductAPI
   # saves ellie staging products
   # without variants or options attributes.
   # primary use for cloning active collections
-
   def self.stage_to_db
     init_stages
     p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
+      begin
         StagingProduct.create(
         title: current['title'],
         site_id: current['id'],
@@ -81,18 +82,25 @@ module ProductAPI
         published_scope: current['published_scope'],
         tags: current['tags'],
         images: current['images'],
+        variants: current['variants'],
+        options: current['options'],
         image: current['image'])
+      rescue
+        puts "error with #{current['title']}"
+        next
+      end
     end
     p 'staging products saved to db'
   end
 
-  # Internal: pushes active_products table to elliestaging
+  # Internal: pushes active_products hash array (HTTParty response)
+  # to elliestaging. Duplicate handles wont push to shopify
   # All methods are module methods and should be
   # called on the ProductAPI module.
   #
   # Examples
   #
-  #   ProductAPI.db_to_stage
+  #   ProductAPI.active_to_stage
   #   #=> pushing products to shopify...
   #   #=> saved [product title]
 def self.active_to_stage
@@ -122,7 +130,6 @@ def self.active_to_stage
   end
   p 'transfer complete'
 end
-
 # Internal: pushes active_products table to elliestaging
 # All methods are module methods and should be
 # called on the ProductAPI module.
@@ -272,4 +279,5 @@ def self.delete_all
   end
   p 'staging products succesfully deleted'
 end
+
 end

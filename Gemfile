@@ -4,6 +4,7 @@ gem 'dotenv'
 gem 'httparty'
 gem 'shopify_api'
 gem 'ruby-progressbar', '~> 1.9'
+gem "sinatra-activerecord"
 
 # Use postgresql as the database for Active Record
 gem 'activerecord', '~> 5.0', '>= 5.0.0.1'

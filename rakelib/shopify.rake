@@ -1,4 +1,5 @@
 require 'active_record'
+require "sinatra/activerecord"
 require 'yaml'
 require 'dotenv/load'
 Dir['./modules/*.rb'].each {|file| require file }
@@ -34,6 +35,11 @@ namespace :destroy do
 end
 
 namespace :product do
+  task :httparty do
+    ActiveRecord::Base.establish_connection(db_config)
+    ProductAPI.init_actives
+  end
+
   desc "saves active product api response"
   task :save_actives do
     ActiveRecord::Base.establish_connection(db_config)

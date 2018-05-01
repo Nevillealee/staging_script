@@ -50,7 +50,7 @@ module YotposAPI
 
   def self.export_products
     time = Time.now.strftime("%b%d%Y")
-    product_url = "https://elliestaging.myshopify.com/products/"
+    product_url = "https://ellie.com/products/"
     CSV.open("/home/neville/Desktop/fam_brands/staging_app/csv/yotpo_products_#{time}.csv", "wb") do |csv|
       csv << [
         "Product ID",
@@ -69,7 +69,7 @@ module YotposAPI
         "Blacklisted",
         "Product Group"
        ]
-       StagingProduct.all.each do |product|
+       Product.all.each do |product|
          product.images[0] ?  img_url = product.images[0]['src'] : img_url = ""
          csv << [
            "#{product.site_id}",
