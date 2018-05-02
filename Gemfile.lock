@@ -123,6 +123,7 @@ DEPENDENCIES
   dotenv
   factory_bot
   httparty
+  minitest
   pg (~> 0.18.4)
   pry
   rspec

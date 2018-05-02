@@ -13,6 +13,7 @@ gem 'pg', '~> 0.18.4'
 
 # test suite
 group :test do
+  gem 'minitest'
   gem 'rspec'
   gem 'factory_bot'
   gem 'database_cleaner'
