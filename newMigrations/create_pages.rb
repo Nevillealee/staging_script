@@ -1,7 +1,7 @@
 class CreatePages < ActiveRecord::Migration[5.1]
   def change
-    create_table :pages do |t|
-      t.string :site_id
+    create_table :pages, id: false do |t|
+      t.bigint :id, primary_key: true
       t.string :title, null: false
       t.string :shop_id
       t.string :handle

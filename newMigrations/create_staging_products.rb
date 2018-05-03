@@ -1,7 +1,7 @@
 class CreateStagingProducts < ActiveRecord::Migration[5.1]
   def change
-    create_table :staging_products do |t|
-      t.string :site_id
+    create_table :staging_products, id: false do |t|
+      t.bigint :id, primary_key: true
       t.string :title, null: false
       t.string :body_html
       t.string :vendor, null: false
@@ -11,9 +11,11 @@ class CreateStagingProducts < ActiveRecord::Migration[5.1]
       t.string :published_scope
       t.jsonb :images
       t.string :tags, array: true
+      t.jsonb :image
+      t.jsonb :variants
+      t.jsonb :options
       t.datetime :created_at, null: false
       t.datetime :updated_at, null: false
-      t.jsonb :image
     end
   end
 end

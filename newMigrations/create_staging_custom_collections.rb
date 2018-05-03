@@ -1,7 +1,7 @@
 class CreateStagingCustomCollections < ActiveRecord::Migration[5.1]
   def change
-    create_table :staging_custom_collections do |t|
-      t.string :site_id
+    create_table :staging_custom_collections, id: false do |t|
+      t.bigint :id, primary_key: true
       t.string :handle
       t.string :title
       t.string :body_html

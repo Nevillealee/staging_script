@@ -1,7 +1,7 @@
 class CreateOptions < ActiveRecord::Migration[5.1]
   def change
-    create_table :options do |t|
-      t.string :site_id
+    create_table :options, id: false do |t|
+      t.bigint :id, primary_key: true
       t.bigint :product_id
       t.datetime :created_at, null: false
       t.datetime :updated_at, null: false

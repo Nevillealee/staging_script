@@ -65,7 +65,7 @@ module CustomCollectionAPI
     init_stages
     STAGING_COLLECTION.each do |current|
       StagingCustomCollection.create!(
-      site_id: current['id'],
+      id: current['id'],
       handle: current['handle'],
       title: current['title'],
       body_html: current['body_html'],
@@ -98,7 +98,7 @@ module CustomCollectionAPI
     init_actives
     ACTIVE_COLLECTION.each do |current|
       CustomCollection.create!(
-      site_id: current['id'],
+      id: current['id'],
       handle: current['handle'],
       title: current['title'],
       body_html: current['body_html'],

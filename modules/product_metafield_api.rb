@@ -23,10 +23,10 @@ module ProductMetafieldAPI
   end
 
   def self.active_to_db
-  # Creates an array of distinct product ids (site_id field in db)
+  # Creates an array of distinct product ids (id field in db)
   # from latest GET Products request from ellie.com
   # saved into local db to use for metafield GET request loop.
-  @product_ids = Product.select('site_id').distinct
+  @product_ids = Product.select('id').distinct
   # Initialize ShopifyAPI gem with active site url
   ShopifyAPI::Base.site =
     "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
@@ -41,18 +41,18 @@ module ProductMetafieldAPI
   @product_ids.each do |x|
     current_meta = ShopifyAPI::Metafield.all(params:
      { resource: 'products',
-       resource_id: x.site_id,
+       resource_id: x.id,
        fields: 'namespace, key, value' })
     if !current_meta.nil? && current_meta[0]
     if current_meta[0].namespace != 'EWD_UFAQ' &&
-      ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.site_id })
+      ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
     # save current validated metafield to db
     ProductMetafield.create(
     namespace: current_meta[0].namespace,
     key: current_meta[0].key,
     value: current_meta[0].value,
     value_type: 'string',
-    owner_id: x.site_id)
+    owner_id: x.id)
     end
     end
     progressbar.increment
@@ -73,8 +73,8 @@ module ProductMetafieldAPI
     @metafields = ProductMetafield.find_by_sql(
       'SELECT product_metafields .*,
        p.title as active_product,
-       sp.site_id as staging_product_id FROM product_metafields
-       INNER JOIN products p ON product_metafields.owner_id = p.site_id
+       sp.id as staging_product_id FROM product_metafields
+       INNER JOIN products p ON product_metafields.owner_id = p.id
        INNER JOIN staging_products sp ON p.title = sp.title;')
        pp @metafields.count
     # creates progress bar because of long method run time

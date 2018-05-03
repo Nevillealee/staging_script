@@ -73,7 +73,7 @@ module ProductAPI
       begin
         StagingProduct.create(
         title: current['title'],
-        site_id: current['id'],
+        id: current['id'],
         body_html: current['body_html'],
         vendor: current['vendor'],
         product_type: current['product_type'],
@@ -218,12 +218,12 @@ def self.active_to_db
 
   ACTIVE_PRODUCT.each do |current|
     prod = Product.create!(
+      id: current['id'],
       title: current['title'],
       body_html: current['body_html'],
       vendor: current['vendor'],
       product_type: current['product_type'],
       handle: current['handle'],
-      site_id: current['id'], # product id from ellie active
       template_suffix: current['template_suffix'],
       published_scope: current['published_scope'],
       tags: current['tags'],
@@ -231,8 +231,8 @@ def self.active_to_db
       image: current['image'])
     current['variants'].each do |current_variant|
       Variant.create!(
-      site_id: current_variant['product_id'], # ID OF LINKED PRODUCT ON ellie ative
-      product_id: prod.id, # LINK TO FK FOR active record ASSOCIATION
+      id: current_variant['id'],
+      product_id: prod.id,
       title: current_variant['title'],
       option1: current_variant['option1'],
       sku: current_variant['sku'],
@@ -248,7 +248,7 @@ def self.active_to_db
     end
     current['options'].each do |current_option|
       Option.create!(
-      site_id: current_option['product_id'], # ID of LINKED product on ellie active
+      id: current_option['id'],
       product_id: prod.id,
       name: current_option['name'],
       position: current_option['position'],

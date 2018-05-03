@@ -6,7 +6,7 @@ class CreateProductMetafields < ActiveRecord::Migration[5.1]
       t.datetime :created_at, null: false
       t.datetime :updated_at, null: false
       t.string :value
-      t.string :owner_id
+      t.bigint :owner_id
       t.string :value_type
     end
     # add an index on the foreign key to improve queries performance

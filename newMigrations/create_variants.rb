@@ -1,8 +1,8 @@
 class CreateVariants < ActiveRecord::Migration[5.1]
   def change
-    create_table :variants do |t|
+    create_table :variants, id: false do |t|
+      t.bigint :id, primary_key: true
       t.string :title
-      t.string :site_id
       t.string :option1, null: false
       t.string :sku, default: ""
       t.string :price

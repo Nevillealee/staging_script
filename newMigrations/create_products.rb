@@ -1,7 +1,7 @@
 class CreateProducts < ActiveRecord::Migration[5.1]
   def change
-    create_table :products do |t|
-      t.string :site_id
+    create_table :products, id: false do |t|
+      t.bigint :id, primary_key: true
       t.string :title, null: false
       t.string :body_html, default: ""
       t.string :vendor, null: false

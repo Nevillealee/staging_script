@@ -28,7 +28,7 @@ module YotposAPI
     yot.each do |current_yot|
       sp = StagingProduct.find_by(title: current_yot['product_title'])
       if sp
-        current_yot['product_id'] = sp['site_id']
+        current_yot['product_id'] = sp['id']
         current_yot.save!
         puts "updated #{current_yot['product_title']} => #{current_yot['product_id']}"
       else
@@ -72,7 +72,7 @@ module YotposAPI
        Product.all.each do |product|
          product.images[0] ?  img_url = product.images[0]['src'] : img_url = ""
          csv << [
-           "#{product.site_id}",
+           "#{product.id}",
            "#{product.title}",
            "",
            "#{product_url}#{product.handle}",

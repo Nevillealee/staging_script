@@ -47,7 +47,7 @@ module PageAPI
     init_actives
     ACTIVE_PAGE.each do |current|
       Page.create(
-        site_id: current['site_id'],
+        id: current['id'],
         shop_id: current['shop_id'], # store id
         title: current['title'],
         handle: current['handle'],
