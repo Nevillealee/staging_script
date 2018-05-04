@@ -74,6 +74,7 @@ ActiveRecord::Schema.define(version: 20180503184552) do
     t.string "images", array: true
     t.string "image"
     t.integer "position"
+    t.index ["product_id"], name: "index_options_on_product_id"
   end
 
   create_table "pages", id: :bigint, default: nil, force: :cascade do |t|
@@ -95,6 +96,8 @@ ActiveRecord::Schema.define(version: 20180503184552) do
     t.string "value"
     t.bigint "owner_id"
     t.string "value_type"
+    t.bigint "product_id"
+    t.index ["product_id"], name: "index_product_metafields_on_product_id"
   end
 
   create_table "products", id: :bigint, default: nil, force: :cascade do |t|
@@ -179,6 +182,7 @@ ActiveRecord::Schema.define(version: 20180503184552) do
     t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_variants_on_product_id"
   end
 
   create_table "yotpos", id: :bigint, default: nil, force: :cascade do |t|
@@ -204,4 +208,7 @@ ActiveRecord::Schema.define(version: 20180503184552) do
     t.string "cf_Default_form_Fit"
   end
 
+  add_foreign_key "options", "products"
+  add_foreign_key "product_metafields", "products"
+  add_foreign_key "variants", "products"
 end

@@ -17,7 +17,7 @@ class CreateVariants < ActiveRecord::Migration[5.1]
       t.bigint :product_id
       t.datetime :created_at, null: false
       t.datetime :updated_at, null: false
-      # t.belongs_to :product, index: { unique: true }, foreign_key: true
+      t.belongs_to :product, index: true, foreign_key: true
     end
   end
 end
