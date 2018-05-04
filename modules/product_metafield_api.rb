@@ -1,7 +1,6 @@
 require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
-require 'pp'
 require 'active_record'
 require 'ruby-progressbar'
 Dir['./modules/*.rb'].each { |file| require file }
@@ -23,38 +22,37 @@ module ProductMetafieldAPI
   end
 
   def self.active_to_db
-  # Creates an array of distinct product ids (id field in db)
-  # from latest GET Products request from ellie.com
+  # Creates an array of all product ids (id field in db)
+  # from products table
   # saved into local db to use for metafield GET request loop.
-  @product_ids = Product.select('id').distinct
-  # Initialize ShopifyAPI gem with active site url
+  @product_ids = Product.select('id').all
   ShopifyAPI::Base.site =
     "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
   # creates progress bar because of long method run time
   size = @product_ids.size
   progressbar = ProgressBar.create(
   title: 'Progess',
-  starting_at: 1,
+  starting_at: 0,
   total: size,
   format: '%t: %p%%  |%B|')
-
+  #metafield get request loop
   @product_ids.each do |x|
     current_meta = ShopifyAPI::Metafield.all(params:
      { resource: 'products',
        resource_id: x.id,
        fields: 'namespace, key, value, id, value_type' })
     if !current_meta.nil? && current_meta[0]
-    if current_meta[0].namespace != 'EWD_UFAQ' &&
+      if current_meta[0].namespace != 'EWD_UFAQ' &&
       ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
-    # save current validated metafield to db
-    ProductMetafield.create(
-    id: current_meta[0].id,
-    namespace: current_meta[0].namespace,
-    key: current_meta[0].key,
-    value: current_meta[0].value,
-    value_type: current_meta[0].value_type,
-    owner_id: x.id)
-    end
+      # save current validated metafield to db
+      ProductMetafield.create(
+        id: current_meta[0].id,
+        namespace: current_meta[0].namespace,
+        key: current_meta[0].key,
+        value: current_meta[0].value,
+        value_type: current_meta[0].value_type,
+        owner_id: x.id)
+      end
     end
     progressbar.increment
   end
@@ -63,14 +61,10 @@ module ProductMetafieldAPI
 
   # creates an array of all product_metafields from db
   # iterates through array creating new product_metafields
-  # one by on with shopify gem method
+  # one by one
   def self.db_to_stage
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    # Join product_metafields, products and staging_products
-    # to link staging product_id to active product_id
-    # before creating product_metafields with new
-    # staging_product_id as owner_id
     @metafields = ProductMetafield.find_by_sql(
       'SELECT product_metafields .*,
        p.title as active_product,
@@ -98,7 +92,7 @@ module ProductMetafieldAPI
       myprod.save
       progressbar.increment
     rescue
-
+      puts "#{current.namespace} metafield failed for #{myprod.title}"
       next
     end
     end

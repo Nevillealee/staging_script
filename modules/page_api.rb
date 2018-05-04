@@ -2,6 +2,7 @@ require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
+require 'ruby-progressbar'
 Dir['./models/*.rb'].each { |file| require file }
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
@@ -48,7 +49,7 @@ module PageAPI
     ACTIVE_PAGE.each do |current|
       Page.create(
         id: current['id'],
-        shop_id: current['shop_id'], # store id
+        shop_id: current['shop_id'],
         title: current['title'],
         handle: current['handle'],
         body_html: current['body_html'],
@@ -66,7 +67,7 @@ module PageAPI
     size = @pages.size
     progressbar = ProgressBar.create(
     title: 'Progess',
-    starting_at: 1,
+    starting_at: 0,
     total: size,
     format: '%t: %p%%  |%B|')
     p 'pushing pages to staging.. This may take several minutes...'
@@ -77,7 +78,7 @@ module PageAPI
       title: current.title,
       body_html: current.body_html,
       author: current.author,
-      template_suffix: 'template_suffix')
+      template_suffix: current.template_suffix || "")
       progressbar.increment
     end
     p 'pages successfully pushed to staging'

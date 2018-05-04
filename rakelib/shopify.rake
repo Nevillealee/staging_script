@@ -22,7 +22,7 @@ namespace :staging do
 end
 
 namespace :destroy do
-  desc "deletes ALL products, custom_collections and collects from STAGING"
+  desc "DELETES ALL products, custom_collections and collects from STAGING"
   task :staging =>
   ['product:delete',
   'customcollection:delete',
@@ -33,35 +33,29 @@ namespace :destroy do
 end
 
 namespace :product do
-  desc "saves active product api response"
+  desc "nuke->pull active products"
   task :save_actives do
-  if Product.first
-    ActiveRecord::Base.connection.execute("TRUNCATE options;")
-    puts 'options table truncated'
-    ActiveRecord::Base.connection.execute("TRUNCATE variants;")
-    puts 'variants table truncated'
-    ActiveRecord::Base.connection.execute("TRUNCATE products;")
-    puts 'products table truncated'
+  if Product.exists?
+    ActiveRecord::Base.connection.execute("TRUNCATE products CASCADE;")
+    ProductAPI.active_to_db
+    ProductMetafieldAPI.active_to_db
+  else
+    ProductAPI.active_to_db
   end
-     ProductAPI.active_to_db
   end
 
-  desc "saves staging products to db"
+  desc "nuke->pull staging products"
   task :save_stages do
-    # ActiveRecord::Base.connection.execute(
-    #   "TRUNCATE staging_products
-    #   RESTART IDENTITY;")
-    # ActiveRecord::Base.connection.execute("ALTER SEQUENCE staging_products_id_seq RESTART WITH 1;")
-    #   puts "staging_product table truncated"
-     ProductAPI.stage_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE staging_products;") if StagingProduct.exists?
+    ProductAPI.stage_to_db
   end
 
-  desc "pushes active products directly to staging"
+  desc "push active products->staging"
   task :active_to_stage do
      ProductAPI.active_to_stage
   end
 
-  desc "pushes active products from db to staging"
+  desc "push active products from db to staging"
   task :db_to_stage do
      ProductAPI.db_to_stage
   end
@@ -71,16 +65,17 @@ namespace :product do
      ProductAPI.stage_update
   end
 
-  desc "deletes all staging products"
+  desc "delete all products from elliestaging"
   task :delete do
     ProductAPI.delete_all
   end
 end
 
 namespace :customcollection do
-  desc "saves active custom collection to db"
+  desc "nuke/pull active custom collection to db"
   task :save_actives do
-     CustomCollectionAPI.active_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE custom_collections;") if CustomCollection.exists?
+    CustomCollectionAPI.active_to_db
   end
 
   desc "POSTs custom collections from db to staging"
@@ -100,9 +95,10 @@ namespace :customcollection do
 end
 
 namespace :collect do
-  desc "saves active collects to db"
+  desc "nuke/pull active collects"
   task :save_actives do
-     CollectAPI.active_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE collects;") if Collect.exists?
+    CollectAPI.active_to_db
   end
 
   desc "pushes active collects in db to staging"
@@ -117,32 +113,32 @@ namespace :collect do
 end
 
 namespace :productmetafield do
-  desc "saves active product's metafields to db"
+  desc "pull active product metafields"
+  ActiveRecord::Base.connection.execute("TRUNCATE product_metafields;") if ProductMetafield.exists?
   task :save_actives do
-     ProductMetafieldAPI.active_to_db
-   end
+   ProductMetafieldAPI.active_to_db
+  end
 
-   desc "pushes local product metafields to staging"
-   task :push_locals do
+  desc "push local product metafields to staging"
+  task :push_locals do
+    ProductMetafieldAPI.db_to_stage
+  end
 
-      ProductMetafieldAPI.db_to_stage
-    end
-
-    desc 'transfers active product metafields onto ellie staging'
-    task :update_stage => ['save_actives', 'push_locals'] do
-      p 'product metafields ported from active to staging successfully'
-    end
+  desc 'transfer active product metafields->ellie staging'
+  task :update_stage => ['save_actives', 'push_locals'] do
+    p 'product metafields ported from active to staging successfully'
+  end
 end
 
 namespace :page do
-  desc "saves active pages to db"
+  desc "nuke/pull active pages"
   task :save_actives do
-     PageAPI.active_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE pages;") if Page.exists?
+    PageAPI.active_to_db
    end
 
-  desc "pushes local pages to staging"
+  desc "push local pages->staging"
   task :push_locals do
- # ActiveRecord::Base.establish_connection(db_config)
     PageAPI.db_to_stage
   end
 end
@@ -150,54 +146,54 @@ end
 # To update blogs, run save_actives, push_locals, save_stages, article:save_actives
 # and finally article:push_locals
 namespace :blog do
-  desc 'GET request for ellie.com blogs'
+  desc 'nuke/pull ellie.com blogs'
   task :save_actives do
-    ActiveRecord::Base.connection.execute("TRUNCATE blogs;")
+      ActiveRecord::Base.connection.execute("TRUNCATE blogs;") if Blog.exists?
       BlogAPI.active_to_db
   end
 
-  desc 'GET request for elliestaging blogs'
+  desc 'pull elliestaging blogs'
   task :save_stages do
     ActiveRecord::Base.connection.execute("TRUNCATE staging_blogs;")
       BlogAPI.stage_to_db
   end
 
-  desc 'POST request for elliestaging.com blogs'
+  desc 'push local blogs->elliestaging'
   task :push_locals do
       BlogAPI.db_to_stage
   end
 end
 
 namespace :article do
-  desc 'GET request for ellie.com articles'
+  desc 'nuke/pull ellie.com articles'
   task :save_actives  => ['blog:save_actives'] do
-    ActiveRecord::Base.connection.execute("TRUNCATE articles;")
+    ActiveRecord::Base.connection.execute("TRUNCATE articles;") if Article.exists?
     ArticleAPI.active_to_db
   end
 
-  desc 'POST request for elliestaging articles'
+  desc 'push local articles->elliestaging'
   task :push_locals do
       ArticleAPI.db_to_stage
   end
 end
 
 namespace :yotpos do
-  desc 'pass in name of source csv (without ext) as an arguement'
+  desc 'pass in name of source csv (without ext) arg'
   task :import_reviews, :csv_name do |t, args|
       YotposAPI.import(args.csv_name)
   end
 
-  desc 'converts product ids from active to staging values'
+  desc 'convert product ids from active->staging'
   task :convert do
       YotposAPI.convert_id
   end
 
-  desc 'exports YOTPO review csv'
+  desc 'export YOTPO review csv'
   task :export_reviews do
       YotposAPI.export_reviews
   end
 
-  desc 'exports YOTPO products import csv'
+  desc 'export YOTPO products csv'
   task :export_products do
       YotposAPI.export_products
   end

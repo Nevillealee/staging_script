@@ -22,12 +22,12 @@ module CollectAPI
     sleep 10
   end
 
+  # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
   def self.init_actives
     ShopifyAPI::Base.site =
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_collect_count = ShopifyAPI::Collect.count
     nb_pages = (active_collect_count / 250.0).ceil
-    # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
     1.upto(nb_pages) do |page|
       ellie_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
@@ -41,12 +41,12 @@ module CollectAPI
     ACTIVE_COLLECT.flatten!
   end
 
+  # Initalize STAGING_COLLECT with all staging products from elliestaging
   def self.init_stages
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_collect_count = ShopifyAPI::Collect.count
     nb_pages = (staging_collect_count / 250.0).ceil
-    # Initalize @STAGING_COLLECT with all staging products from elliestaging
     1.upto(nb_pages) do |page| # throttling conditon
       ellie_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
@@ -63,7 +63,7 @@ module CollectAPI
   def self.active_to_db
     init_actives
     ACTIVE_COLLECT.each do |current|
-      Collect.create!(
+      Collect.create(
         id: current['id'],
         collection_id: current['collection_id'],
         featured: current['featured'],

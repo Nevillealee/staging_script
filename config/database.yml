@@ -1,24 +1,5 @@
-# default: &default
-#   encoding: utf8
-#   adapter: postgresql
-#   port: 5432
-#   pool: 5
-#   timeout: 5000
-#
-# development:
-#   <<: *default
-#   encoding: 'utf8'
-#   adapter: 'postgresql'
-#   port: 5432
-#   pool: 5
-#   timeout: 5000
-#   host: 'localhost'
-#   username: 'postgres'
-#   password: 'postgres'
-#   database: 'test'
 development:
   adapter: postgresql
   encoding: utf8
-  #database: test
   pool: 5
   url: <%= ENV['DATABASE_URL'] %>

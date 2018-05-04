@@ -37,7 +37,7 @@ module ArticleAPI
       b.title as blog_title from articles
       INNER JOIN blogs b ON articles.blog_id = b.id
       INNER JOIN staging_blogs sb ON sb.title = b.title;")
-      
+
       p 'staging_articles initialized...'
 
       @staging_articles.each do |current|

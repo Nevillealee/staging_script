@@ -122,7 +122,9 @@ def self.active_to_stage
      variants: current['variants'],
      options: current['options'],
      images: current['images'],
-     image: current['image'])
+     image: current['image'],
+     created_at: current['created_at'],
+     updated_at: current['updated_at'])
    rescue
      p "error with #{current['title']}"
      next
@@ -228,7 +230,9 @@ def self.active_to_db
       published_scope: current['published_scope'],
       tags: current['tags'],
       images: current['images'],
-      image: current['image'])
+      image: current['image'],
+      created_at: current['created_at'],
+      updated_at: current['updated_at'])
     current['variants'].each do |current_variant|
       Variant.create!(
       id: current_variant['id'],
