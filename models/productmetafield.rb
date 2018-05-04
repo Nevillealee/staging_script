@@ -1,2 +1,3 @@
-class ProductMetafield < ActiveRecord::Base 
+class ProductMetafield < ActiveRecord::Base
+  # belongs_to :product
 end

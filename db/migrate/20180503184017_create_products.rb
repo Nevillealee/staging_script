@@ -10,10 +10,10 @@ class CreateProducts < ActiveRecord::Migration[5.1]
       t.string :template_suffix
       t.string :published_scope
       t.jsonb :images
-      t.string :tags, array: true
-      t.datetime :created_at, null: false
-      t.datetime :updated_at, null: false
       t.jsonb :image
+      t.string :tags, array: true
+      t.datetime :created_at
+      t.datetime :updated_at
     end
   end
 end

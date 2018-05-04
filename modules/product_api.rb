@@ -1,7 +1,9 @@
 require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
-require 'pp'
+require 'ruby-progressbar'
+Dir['./modules/*.rb'].each {|file| require file }
+Dir['./models/*.rb'].each {|file| require file }
 
 # Internal: Automate GET, POST, PUT requests to Ellie.com
 # and Elliestaging shopify sites for products cloning
@@ -40,8 +42,6 @@ module ProductAPI
     p 'active products initialized'
 
     ACTIVE_PRODUCT.flatten!
-    pp ACTIVE_PRODUCT[0]
-
   end
   def self.init_stages
     ShopifyAPI::Base.site =
@@ -256,6 +256,7 @@ def self.active_to_db
       images: current_option['images'],
       image: current_option['image'])
     end
+    p "saved #{current['title']}"
   end
   p 'Active products saved succesfully'
 end

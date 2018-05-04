@@ -1,13 +1,11 @@
+require 'dotenv'
+Dotenv.load
+require 'sinatra'
+set :database_file, "../config/database.yml"
 require 'active_record'
-require "sinatra/activerecord"
-require 'yaml'
-require 'dotenv/load'
+require 'sinatra/activerecord/rake'
 Dir['./modules/*.rb'].each {|file| require file }
 Dir['./models/*.rb'].each {|file| require file }
-require 'shopify_api'
-
-db_config = YAML::load(File.open('db/database.yml'))
-db_config_admin = db_config.merge({database: 'postgres', schema_search_path: 'public'})
 
 namespace :staging do
   desc "links products/customcollections on ellie staging"
@@ -35,56 +33,46 @@ namespace :destroy do
 end
 
 namespace :product do
-  task :httparty do
-    ActiveRecord::Base.establish_connection(db_config)
-    ProductAPI.init_actives
-  end
-
   desc "saves active product api response"
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
-    ActiveRecord::Base.connection.execute(
-      "TRUNCATE options,
-      variants, products
-      RESTART IDENTITY;")
-      ActiveRecord::Base.connection.execute("ALTER SEQUENCE products_id_seq RESTART WITH 1;")
-      ActiveRecord::Base.connection.execute("ALTER SEQUENCE variants_id_seq RESTART WITH 1;")
-      ActiveRecord::Base.connection.execute("ALTER SEQUENCE options_id_seq RESTART WITH 1;")
+  if Product.first
+    ActiveRecord::Base.connection.execute("TRUNCATE options;")
+    puts 'options table truncated'
+    ActiveRecord::Base.connection.execute("TRUNCATE variants;")
+    puts 'variants table truncated'
+    ActiveRecord::Base.connection.execute("TRUNCATE products;")
+    puts 'products table truncated'
+  end
      ProductAPI.active_to_db
   end
 
   desc "saves staging products to db"
   task :save_stages do
-    ActiveRecord::Base.establish_connection(db_config)
-    ActiveRecord::Base.connection.execute(
-      "TRUNCATE staging_products
-      RESTART IDENTITY;")
-    ActiveRecord::Base.connection.execute("ALTER SEQUENCE staging_products_id_seq RESTART WITH 1;")
-      puts "staging_product table truncated"
+    # ActiveRecord::Base.connection.execute(
+    #   "TRUNCATE staging_products
+    #   RESTART IDENTITY;")
+    # ActiveRecord::Base.connection.execute("ALTER SEQUENCE staging_products_id_seq RESTART WITH 1;")
+    #   puts "staging_product table truncated"
      ProductAPI.stage_to_db
   end
 
   desc "pushes active products directly to staging"
   task :active_to_stage do
-    ActiveRecord::Base.establish_connection(db_config)
      ProductAPI.active_to_stage
   end
 
   desc "pushes active products from db to staging"
   task :db_to_stage do
-    ActiveRecord::Base.establish_connection(db_config)
      ProductAPI.db_to_stage
   end
 
   desc "update staging products from db"
   task :update_stages do
-    ActiveRecord::Base.establish_connection(db_config)
      ProductAPI.stage_update
   end
 
   desc "deletes all staging products"
   task :delete do
-    ActiveRecord::Base.establish_connection(db_config)
     ProductAPI.delete_all
   end
 end
@@ -92,25 +80,21 @@ end
 namespace :customcollection do
   desc "saves active custom collection to db"
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
      CustomCollectionAPI.active_to_db
   end
 
   desc "POSTs custom collections from db to staging"
   task :push_locals do
-    ActiveRecord::Base.establish_connection(db_config)
      CustomCollectionAPI.db_to_stage
   end
 
   desc "saves staging custom collections to db"
   task :save_stages do
-    ActiveRecord::Base.establish_connection(db_config)
      CustomCollectionAPI.stage_to_db
   end
 
   desc "deletes all staging custom collections"
   task :delete do
-    ActiveRecord::Base.establish_connection(db_config)
     CustomCollectionAPI.delete_all
   end
 end
@@ -118,19 +102,16 @@ end
 namespace :collect do
   desc "saves active collects to db"
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
      CollectAPI.active_to_db
   end
 
   desc "pushes active collects in db to staging"
   task :push_locals do
-    ActiveRecord::Base.establish_connection(db_config)
      CollectAPI.db_to_stage
   end
 
   desc "deletes all staging collects"
   task :delete do
-    ActiveRecord::Base.establish_connection(db_config)
     CollectAPI.delete_all
   end
 end
@@ -138,13 +119,12 @@ end
 namespace :productmetafield do
   desc "saves active product's metafields to db"
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
      ProductMetafieldAPI.active_to_db
    end
 
    desc "pushes local product metafields to staging"
    task :push_locals do
-     ActiveRecord::Base.establish_connection(db_config)
+
       ProductMetafieldAPI.db_to_stage
     end
 
@@ -157,13 +137,12 @@ end
 namespace :page do
   desc "saves active pages to db"
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
      PageAPI.active_to_db
    end
 
   desc "pushes local pages to staging"
   task :push_locals do
-   ActiveRecord::Base.establish_connection(db_config)
+ # ActiveRecord::Base.establish_connection(db_config)
     PageAPI.db_to_stage
   end
 end
@@ -173,21 +152,18 @@ end
 namespace :blog do
   desc 'GET request for ellie.com blogs'
   task :save_actives do
-    ActiveRecord::Base.establish_connection(db_config)
     ActiveRecord::Base.connection.execute("TRUNCATE blogs;")
       BlogAPI.active_to_db
   end
 
   desc 'GET request for elliestaging blogs'
   task :save_stages do
-    ActiveRecord::Base.establish_connection(db_config)
     ActiveRecord::Base.connection.execute("TRUNCATE staging_blogs;")
       BlogAPI.stage_to_db
   end
 
   desc 'POST request for elliestaging.com blogs'
   task :push_locals do
-    ActiveRecord::Base.establish_connection(db_config)
       BlogAPI.db_to_stage
   end
 end
@@ -195,14 +171,12 @@ end
 namespace :article do
   desc 'GET request for ellie.com articles'
   task :save_actives  => ['blog:save_actives'] do
-    ActiveRecord::Base.establish_connection(db_config)
     ActiveRecord::Base.connection.execute("TRUNCATE articles;")
     ArticleAPI.active_to_db
   end
 
   desc 'POST request for elliestaging articles'
   task :push_locals do
-    ActiveRecord::Base.establish_connection(db_config)
       ArticleAPI.db_to_stage
   end
 end
@@ -210,25 +184,21 @@ end
 namespace :yotpos do
   desc 'pass in name of source csv (without ext) as an arguement'
   task :import_reviews, :csv_name do |t, args|
-    ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.import(args.csv_name)
   end
 
   desc 'converts product ids from active to staging values'
   task :convert do
-    ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.convert_id
   end
 
   desc 'exports YOTPO review csv'
   task :export_reviews do
-    ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.export_reviews
   end
 
   desc 'exports YOTPO products import csv'
   task :export_products do
-    ActiveRecord::Base.establish_connection(db_config)
       YotposAPI.export_products
   end
 end

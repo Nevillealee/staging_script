@@ -1,24 +1,19 @@
 source "https://rubygems.org"
-
+ruby '2.5.0'
 gem 'dotenv'
 gem 'httparty'
 gem 'shopify_api'
 gem 'ruby-progressbar', '~> 1.9'
-gem "sinatra-activerecord"
-
+gem 'activerecord'
+gem 'sinatra-activerecord'
+gem 'rake'
+gem 'sinatra'
+gem "activesupport"
 # Use postgresql as the database for Active Record
-gem 'activerecord', '~> 5.0', '>= 5.0.0.1'
-gem 'standalone_migrations'
+# gem 'activerecord', '~> 5.0', '>= 5.0.0.1'
 gem 'pg', '~> 0.18.4'
 
-# test suite
-group :test do
-  gem 'minitest'
-  gem 'rspec'
-  gem 'factory_bot'
-  gem 'database_cleaner'
-end
-
-group :development, :test do
-  gem 'pry'
-end
+gem 'minitest'
+gem 'rspec'
+gem 'factory_bot'
+gem 'pry'

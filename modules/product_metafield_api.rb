@@ -42,16 +42,17 @@ module ProductMetafieldAPI
     current_meta = ShopifyAPI::Metafield.all(params:
      { resource: 'products',
        resource_id: x.id,
-       fields: 'namespace, key, value' })
+       fields: 'namespace, key, value, id, value_type' })
     if !current_meta.nil? && current_meta[0]
     if current_meta[0].namespace != 'EWD_UFAQ' &&
       ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
     # save current validated metafield to db
     ProductMetafield.create(
+    id: current_meta[0].id,
     namespace: current_meta[0].namespace,
     key: current_meta[0].key,
     value: current_meta[0].value,
-    value_type: 'string',
+    value_type: current_meta[0].value_type,
     owner_id: x.id)
     end
     end
@@ -93,7 +94,7 @@ module ProductMetafieldAPI
       namespace: current.namespace,
       key: current.key,
       value: current.value,
-      value_type: 'string' ))
+      value_type: current.value_type ))
       myprod.save
       progressbar.increment
     rescue

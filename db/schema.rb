@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180501152149) do
+ActiveRecord::Schema.define(version: 20180503184552) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -45,18 +45,16 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.datetime "created_at"
   end
 
-  create_table "collects", force: :cascade do |t|
-    t.string "collection_id"
+  create_table "collects", id: :bigint, default: nil, force: :cascade do |t|
+    t.bigint "collection_id"
     t.boolean "featured"
-    t.string "site_id"
     t.integer "position"
-    t.string "product_id"
+    t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "custom_collections", force: :cascade do |t|
-    t.string "site_id"
+  create_table "custom_collections", id: :bigint, default: nil, force: :cascade do |t|
     t.string "handle"
     t.string "title"
     t.string "body_html"
@@ -67,8 +65,7 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "options", force: :cascade do |t|
-    t.string "site_id"
+  create_table "options", id: :bigint, default: nil, force: :cascade do |t|
     t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -77,11 +74,9 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.string "images", array: true
     t.string "image"
     t.integer "position"
-    t.index ["product_id"], name: "index_options_on_product_id"
   end
 
-  create_table "pages", force: :cascade do |t|
-    t.string "site_id"
+  create_table "pages", id: :bigint, default: nil, force: :cascade do |t|
     t.string "title", null: false
     t.string "shop_id"
     t.string "handle"
@@ -92,18 +87,17 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "product_metafields", force: :cascade do |t|
+  create_table "product_metafields", id: :bigint, default: nil, force: :cascade do |t|
     t.string "namespace"
     t.string "key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "value"
-    t.string "owner_id"
+    t.bigint "owner_id"
     t.string "value_type"
   end
 
-  create_table "products", force: :cascade do |t|
-    t.string "site_id"
+  create_table "products", id: :bigint, default: nil, force: :cascade do |t|
     t.string "title", null: false
     t.string "body_html", default: ""
     t.string "vendor", null: false
@@ -112,10 +106,10 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.string "template_suffix"
     t.string "published_scope"
     t.jsonb "images"
-    t.string "tags", array: true
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.jsonb "image"
+    t.string "tags", array: true
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "staging_blogs", id: :bigint, default: nil, force: :cascade do |t|
@@ -130,19 +124,18 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.datetime "created_at"
   end
 
-  create_table "staging_collects", force: :cascade do |t|
-    t.string "new_cc_id"
+  create_table "staging_collects", id: :bigint, default: nil, force: :cascade do |t|
+    t.bigint "new_cc_id"
     t.string "custom_collection_handle"
-    t.string "old_cc_id"
-    t.string "new_p_id"
+    t.bigint "old_cc_id"
+    t.bigint "new_p_id"
     t.string "product_handle"
-    t.string "old_p_id"
+    t.bigint "old_p_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "staging_custom_collections", force: :cascade do |t|
-    t.string "site_id"
+  create_table "staging_custom_collections", id: :bigint, default: nil, force: :cascade do |t|
     t.string "handle"
     t.string "title"
     t.string "body_html"
@@ -153,8 +146,7 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "staging_products", force: :cascade do |t|
-    t.string "site_id"
+  create_table "staging_products", id: :bigint, default: nil, force: :cascade do |t|
     t.string "title", null: false
     t.string "body_html"
     t.string "vendor", null: false
@@ -164,16 +156,15 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.string "published_scope"
     t.jsonb "images"
     t.string "tags", array: true
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
     t.jsonb "image"
     t.jsonb "variants"
     t.jsonb "options"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
-  create_table "variants", force: :cascade do |t|
+  create_table "variants", id: :bigint, default: nil, force: :cascade do |t|
     t.string "title"
-    t.string "site_id"
     t.string "option1", null: false
     t.string "sku", default: ""
     t.string "price"
@@ -188,11 +179,9 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["product_id"], name: "index_variants_on_product_id"
   end
 
-  create_table "yotpos", id: false, force: :cascade do |t|
-    t.bigint "id", null: false
+  create_table "yotpos", id: :bigint, default: nil, force: :cascade do |t|
     t.string "user_type"
     t.string "appkey"
     t.boolean "published"
@@ -215,6 +204,4 @@ ActiveRecord::Schema.define(version: 20180501152149) do
     t.string "cf_Default_form_Fit"
   end
 
-  add_foreign_key "options", "products"
-  add_foreign_key "variants", "products"
 end

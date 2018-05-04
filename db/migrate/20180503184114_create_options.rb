@@ -10,10 +10,7 @@ class CreateOptions < ActiveRecord::Migration[5.1]
       t.string :images, array: true
       t.string :image
       t.integer :position
+      # t.belongs_to :product, index: { unique: true }, foreign_key: true
     end
-    # add an index on the foreign key to improve queries performance
-    add_index :options, :product_id
-    # foreign key constraint to ensure referential data integrity
-    add_foreign_key :options, :products
   end
 end
