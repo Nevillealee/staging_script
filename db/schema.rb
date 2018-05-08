@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180503184552) do
+ActiveRecord::Schema.define(version: 20180508172400) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -125,6 +125,7 @@ ActiveRecord::Schema.define(version: 20180503184552) do
     t.string "tags"
     t.datetime "updated_at"
     t.datetime "created_at"
+    t.string "admin_graphql_api_id"
   end
 
   create_table "staging_collects", id: :bigint, default: nil, force: :cascade do |t|

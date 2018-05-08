@@ -78,6 +78,7 @@ module PageAPI
       title: current.title,
       body_html: current.body_html,
       author: current.author,
+      shop_id: '19046091',
       template_suffix: current.template_suffix || "")
       progressbar.increment
     end

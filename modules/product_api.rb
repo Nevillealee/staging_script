@@ -84,7 +84,9 @@ module ProductAPI
         images: current['images'],
         variants: current['variants'],
         options: current['options'],
-        image: current['image'])
+        image: current['image'],
+        created_at: current['created_at'],
+        updated_at: current['updated_at'])
       rescue
         puts "error with #{current['title']}"
         next

@@ -85,7 +85,8 @@ namespace :customcollection do
 
   desc "saves staging custom collections to db"
   task :save_stages do
-     CustomCollectionAPI.stage_to_db
+    ActiveRecord::Base.connection.execute("TRUNCATE staging_custom_collections;") if StagingCustomCollection.exists?
+    CustomCollectionAPI.stage_to_db
   end
 
   desc "deletes all staging custom collections"

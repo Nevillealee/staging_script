@@ -68,7 +68,10 @@ module CollectAPI
         collection_id: current['collection_id'],
         featured: current['featured'],
         position: current['position'],
-        product_id: current['product_id'])
+        product_id: current['product_id'],
+        updated_at: current['updated_at'],
+        created_at: current['created_at']
+      )
     end
     p 'Collects succesfully saved'
   end
@@ -94,7 +97,11 @@ module CollectAPI
       CollectAPI.shopify_api_throttle
       ShopifyAPI::Collect.create(
         product_id: current['new_p_id'],
-        collection_id: current['new_cc_id'])
+        collection_id: current['new_cc_id'],
+        position: current['position'],
+        updated_at: current['updated_at'],
+        created_at: current['created_at']
+      )
     end
     p 'local collects successfully pushed to staging'
   end

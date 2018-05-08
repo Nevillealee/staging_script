@@ -71,7 +71,10 @@ module CustomCollectionAPI
       body_html: current['body_html'],
       sort_order: current['sort_order'],
       template_suffix: current['template_suffix'],
-      published_scope: current['published_scope'])
+      published_scope: current['published_scope'],
+      updated_at: current['updated_at'],
+      created_at: current['created_at']
+    )
     end
     p 'Staging Custom Collections saved succesfully'
   end

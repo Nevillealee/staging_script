@@ -69,7 +69,8 @@ module BlogAPI
     p 'calling pull blogs'
     STAGING_BLOG.each do |object|
       p "saving: #{object['title']}"
-      StagingBlog.find_or_initialize_by(id: object['id']).update(object)
+      puts object.to_json
+      StagingBlog.find_or_create_by(id: object['id']).update(object)
     end
     p 'task complete'
   end
