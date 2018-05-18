@@ -18,8 +18,8 @@ module CollectAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
-    puts 'SLEEPING 10'
-    sleep 10
+    puts 'SLEEPING 5'
+    sleep 5
   end
 
   # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
@@ -82,7 +82,7 @@ module CollectAPI
     # creates an array of active(old) and staging(new)
     # product/custom collection ids objects matched by handle
     @collect_matches = Collect.find_by_sql(
-      "SELECT scc.id as new_cc_id,
+      "SELECT scc.id as new_cc_id, c.position, c.updated_at, c.created_at,
        scc.handle as custom_collection_handle, cc.id as old_cc_id,
        sp.id as new_p_id,
        sp.handle as product_handle,  p.id as old_p_id
@@ -110,7 +110,7 @@ module CollectAPI
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       init_stages
-    p 'deleting products...'
+    p 'deleting collects...'
     STAGING_COLLECT.each do |current|
       shopify_api_throttle
       ShopifyAPI::Collect.delete(current['id'])

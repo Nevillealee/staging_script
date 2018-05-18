@@ -62,7 +62,7 @@ namespace :product do
 
   desc "update staging products from db"
   task :update_stages do
-     ProductAPI.stage_update
+     ProductAPI.stage_attr_update
   end
 
   desc "delete all products from elliestaging"

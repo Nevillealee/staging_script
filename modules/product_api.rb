@@ -146,33 +146,63 @@ end
 def self.db_to_stage
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-
+  # updates staging with products on ellie that arent on staging according to tables
   product = Product.find_by_sql(
     "SELECT products.* from products
     LEFT JOIN staging_products
     ON products.handle = staging_products.handle
-    WHERE staging_products.handle is null;")
+    WHERE staging_products.handle is null
+    AND products.title not like '%Auto renew%';"
+  )
 
   p 'pushing products to shopify...'
   product.each do |current|
-    shopify_api_throttle
+    ProductAPI.shopify_api_throttle
     begin
-    ShopifyAPI::Product.create(
-     title: current['title'],
+    ShopifyAPI::Product.create!(
+     title: "#{current['title']}",
      vendor: current['vendor'],
      body_html: current['body_html'] || "",
      handle: current['handle'],
      product_type: current['product_type'] || "",
      template_suffix: current['template_suffix'] || "",
-     variants: current.variants || "",
-     options: current.options || "",
      images: current['images'] || "",
-     image: current['image'] || "")
-     p "saved  #{current['title']}"
-   rescue
+     image: current['image'] || "",
+     tags: current['tags'],
+     created_at: current['created_at'],
+     updated_at: current['updated_at'])
+   rescue => error
      p "error with #{current['title']}"
    end
+
+   staging_product = ShopifyAPI::Product.find(:all, params: {handle: current['handle']})
+   myid = staging_product[0].attributes["id"]
+
+   temp_variant = ShopifyAPI::Variant.find(staging_product[0].attributes['variants'][0].attributes['id'])
+   var_id = staging_product[0].attributes['variants'][0].attributes['id']
+
+   current.variants.each do |x|
+    hash_var =  ShopifyAPI::Variant.new(
+      "title"=> x.title,
+      "price"=> x.price,
+      "sku"=> x.sku,
+      "inventory_policy"=> x.inventory_policy,
+      "fulfillment_service"=> x.fulfillment_service,
+      "inventory_management"=> x.inventory_management,
+      "option1"=> x.option1,
+      "barcode"=> x.barcode,
+      "grams"=> x.grams,
+      "image_id"=> x.image_id,
+      "weight_unit"=> x.weight_unit,
+    )
+
+    hash_var.prefix_options = { product_id: myid }
+    staging_product[0].attributes['variants'].push(hash_var)
+    staging_product[0].save
+   end
+   puts "#{current['title']}"
   end
+  puts "products pushed to staging"
 end
 
 # Internal: Update ellie staging product images
@@ -183,9 +213,9 @@ end
 #
 #   ProductAPI.stage_update
 #   #=> updated '[product title]'s images
-def self.stage_update
+def self.stage_attr_update
   init_actives
-  ShopifyAPI::Base.clear_session
+  # ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
   size = ACTIVE_PRODUCT.size
@@ -197,15 +227,21 @@ def self.stage_update
   # ACTIVE_PRODUCT array of hashes
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
+    begin
     prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
-    if (prod && prod.images)
-      prod.images = current['images']
-      prod.image = current['image']
+    if (prod && prod.body_html)
+      prod.body_html = current['body_html']
+      # prod.image = current['image']
       prod.save
-    puts "updated #{prod.title}'s images"
+    puts "updated #{prod.title}'s body_html"
     end
     progressbar.increment
   end
+rescue
+  puts "error on #{prod.title}. sleeping 10 seconds"
+  sleep 10
+  next
+end
   p "Process complete.."
 end
 
