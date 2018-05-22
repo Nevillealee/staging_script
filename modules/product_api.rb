@@ -154,13 +154,13 @@ def self.db_to_stage
     WHERE staging_products.handle is null
     AND products.title not like '%Auto renew%';"
   )
-
   p 'pushing products to shopify...'
+
   product.each do |current|
     ProductAPI.shopify_api_throttle
     begin
     ShopifyAPI::Product.create!(
-     title: "#{current['title']}",
+     title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'] || "",
      handle: current['handle'],
@@ -174,13 +174,12 @@ def self.db_to_stage
    rescue => error
      p "error with #{current['title']}"
    end
-
+  # pull down product just created with its new staging id
    staging_product = ShopifyAPI::Product.find(:all, params: {handle: current['handle']})
    myid = staging_product[0].attributes["id"]
-
-   temp_variant = ShopifyAPI::Variant.find(staging_product[0].attributes['variants'][0].attributes['id'])
-   var_id = staging_product[0].attributes['variants'][0].attributes['id']
-
+   staging_product[0].attributes['variants'].clear
+   # copy each variant from db table into hashes
+   # to push up with staging product via its variant array
    current.variants.each do |x|
     hash_var =  ShopifyAPI::Variant.new(
       "title"=> x.title,
@@ -189,18 +188,20 @@ def self.db_to_stage
       "inventory_policy"=> x.inventory_policy,
       "fulfillment_service"=> x.fulfillment_service,
       "inventory_management"=> x.inventory_management,
+      "position"=> x.position,
       "option1"=> x.option1,
       "barcode"=> x.barcode,
       "grams"=> x.grams,
       "image_id"=> x.image_id,
-      "weight_unit"=> x.weight_unit,
+      "inventory_quantity" => x.inventory_quantity,
+      "weight_unit"=> x.weight_unit
     )
-
+    # linked product_id lives in prefix_options key not attributes!
     hash_var.prefix_options = { product_id: myid }
     staging_product[0].attributes['variants'].push(hash_var)
-    staging_product[0].save
    end
-   puts "#{current['title']}"
+   staging_product[0].save
+   p "#{current['title']} saved with variants"
   end
   puts "products pushed to staging"
 end
@@ -282,10 +283,12 @@ def self.active_to_db
       barcode: current_variant['barcode'],
       compare_at_price: current_variant['compare_at_price'],
       fulfillment_service: current_variant['fulfillment_service'],
+      position: current_variant['position'],
       grams: current_variant['grams'],
       image_id: current_variant['image_id'],
       inventory_management: current_variant['inventory_management'],
       inventory_policy: current_variant['inventory_policy'],
+      inventory_quantity: current_variant['inventory_quantity'],
       weight_unit: current_variant['weight_unit'])
     end
     current['options'].each do |current_option|

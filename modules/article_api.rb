@@ -53,6 +53,8 @@ module ArticleAPI
             handle: current['handle'],
             image: current['image'],
             published_at: current['published_at'],
+            created_at: current['created_at'],
+            updated_at: current['updated_at'],
             published: current['published'],
             template_suffix: current['template_suffix']
             } }.to_json, headers: { 'Content-Type' => 'application/json' },

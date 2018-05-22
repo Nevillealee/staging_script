@@ -18,6 +18,7 @@ module ProductMetafieldAPI
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
+    puts "credit limited reached, sleepng 10..."
     sleep 10
   end
 
@@ -37,6 +38,7 @@ module ProductMetafieldAPI
   format: '%t: %p%%  |%B|')
   #metafield get request loop
   @product_ids.each do |x|
+    shopify_api_throttle
     current_meta = ShopifyAPI::Metafield.all(params:
      { resource: 'products',
        resource_id: x.id,

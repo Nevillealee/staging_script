@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180508172400) do
+ActiveRecord::Schema.define(version: 20180522161948) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -31,6 +31,7 @@ ActiveRecord::Schema.define(version: 20180508172400) do
     t.string "summary_html"
     t.datetime "published_at"
     t.jsonb "metafields"
+    t.string "admin_graphql_api_id"
   end
 
   create_table "blogs", id: :bigint, default: nil, force: :cascade do |t|
@@ -43,6 +44,7 @@ ActiveRecord::Schema.define(version: 20180508172400) do
     t.string "tags"
     t.datetime "updated_at"
     t.datetime "created_at"
+    t.string "admin_graphql_api_id"
   end
 
   create_table "collects", id: :bigint, default: nil, force: :cascade do |t|
@@ -173,7 +175,7 @@ ActiveRecord::Schema.define(version: 20180508172400) do
     t.string "sku", default: ""
     t.string "price"
     t.string "barcode", default: ""
-    t.boolean "compare_at_price"
+    t.string "compare_at_price"
     t.string "fulfillment_service"
     t.bigint "grams"
     t.bigint "image_id"
@@ -183,6 +185,8 @@ ActiveRecord::Schema.define(version: 20180508172400) do
     t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "inventory_quantity"
+    t.string "position"
     t.index ["product_id"], name: "index_variants_on_product_id"
   end
 

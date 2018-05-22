@@ -2,6 +2,7 @@ require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
+require 'ruby-progressbar'
 # Internal: Automate GET, POST, PUT requests to Ellie.com
 # and Elliestaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
@@ -18,8 +19,8 @@ module CollectAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
-    puts 'SLEEPING 5'
-    sleep 5
+    puts 'SLEEPING 10'
+    sleep 10
   end
 
   # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
@@ -92,6 +93,13 @@ module CollectAPI
        INNER JOIN staging_products sp ON p.handle = sp.handle
        INNER JOIN staging_custom_collections scc ON cc.handle = scc.handle;")
 
+       size = @collect_matches.size
+       progressbar = ProgressBar.create(
+       title: 'Progess',
+       starting_at: 0,
+       total: size,
+       format: '%t: %p%%  |%B|')
+
     p 'pushing local collects to staging...'
     @collect_matches.each do |current|
       CollectAPI.shopify_api_throttle
@@ -102,6 +110,7 @@ module CollectAPI
         updated_at: current['updated_at'],
         created_at: current['created_at']
       )
+      progressbar.increment
     end
     p 'local collects successfully pushed to staging'
   end
