@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180522161948) do
+ActiveRecord::Schema.define(version: 20180523174040) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -98,8 +98,6 @@ ActiveRecord::Schema.define(version: 20180522161948) do
     t.string "value"
     t.bigint "owner_id"
     t.string "value_type"
-    t.bigint "product_id"
-    t.index ["product_id"], name: "index_product_metafields_on_product_id"
   end
 
   create_table "products", id: :bigint, default: nil, force: :cascade do |t|
@@ -214,6 +212,5 @@ ActiveRecord::Schema.define(version: 20180522161948) do
   end
 
   add_foreign_key "options", "products"
-  add_foreign_key "product_metafields", "products"
   add_foreign_key "variants", "products"
 end

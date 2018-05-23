@@ -37,12 +37,16 @@ module ProductMetafieldAPI
   total: size,
   format: '%t: %p%%  |%B|')
   #metafield get request loop
+
   @product_ids.each do |x|
-    shopify_api_throttle
+    # change shopify_api_throttle shopify keys to active in its method before
+    # uncommenting below method call
+    # shopify_api_throttle
     current_meta = ShopifyAPI::Metafield.all(params:
      { resource: 'products',
-       resource_id: x.id,
+       resource_id: "#{x.id}",
        fields: 'namespace, key, value, id, value_type' })
+
     if !current_meta.nil? && current_meta[0]
       if current_meta[0].namespace != 'EWD_UFAQ' &&
       ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
@@ -54,6 +58,7 @@ module ProductMetafieldAPI
         value: current_meta[0].value,
         value_type: current_meta[0].value_type,
         owner_id: x.id)
+        puts "saved #{x.id}"
       end
     end
     progressbar.increment

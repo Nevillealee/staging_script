@@ -38,7 +38,6 @@ namespace :product do
   if Product.exists?
     ActiveRecord::Base.connection.execute("TRUNCATE products CASCADE;")
     ProductAPI.active_to_db
-    ProductMetafieldAPI.active_to_db
   else
     ProductAPI.active_to_db
   end

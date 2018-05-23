@@ -185,6 +185,7 @@ def self.db_to_stage
       "title"=> x.title,
       "price"=> x.price,
       "sku"=> x.sku,
+      "compare_at_price"=> x.compare_at_price,
       "inventory_policy"=> x.inventory_policy,
       "fulfillment_service"=> x.fulfillment_service,
       "inventory_management"=> x.inventory_management,
@@ -216,7 +217,7 @@ end
 #   #=> updated '[product title]'s images
 def self.stage_attr_update
   init_actives
-  # ShopifyAPI::Base.clear_session
+  ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
   size = ACTIVE_PRODUCT.size
@@ -232,14 +233,13 @@ def self.stage_attr_update
     prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
     if (prod && prod.body_html)
       prod.body_html = current['body_html']
-      # prod.image = current['image']
+      # product.body_html = current['body_html']
       prod.save
-    puts "updated #{prod.title}'s body_html"
     end
     progressbar.increment
   end
 rescue
-  puts "error on #{prod.title}. sleeping 10 seconds"
+  puts "error on #{prod.title}"
   sleep 10
   next
 end
