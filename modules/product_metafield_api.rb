@@ -1,7 +1,6 @@
 require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
-require 'active_record'
 require 'ruby-progressbar'
 Dir['./modules/*.rb'].each { |file| require file }
 Dir['./models/*.rb'].each { |file| require file }
@@ -46,6 +45,7 @@ module ProductMetafieldAPI
      { resource: 'products',
        resource_id: "#{x.id}",
        fields: 'namespace, key, value, id, value_type' })
+       current_meta.inspect
 
     if !current_meta.nil? && current_meta[0]
       if current_meta[0].namespace != 'EWD_UFAQ' &&
@@ -72,13 +72,14 @@ module ProductMetafieldAPI
   def self.db_to_stage
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+
     @metafields = ProductMetafield.find_by_sql(
-      'SELECT product_metafields .*,
+      "SELECT product_metafields.*,
        p.title as active_product,
        sp.id as staging_product_id FROM product_metafields
        INNER JOIN products p ON product_metafields.owner_id = p.id
-       INNER JOIN staging_products sp ON p.title = sp.title;')
-       pp @metafields.count
+       INNER JOIN staging_products sp ON p.title = sp.title;")
+       puts @metafields.size
     # creates progress bar because of long method run time
     size = @metafields.size
     progressbar = ProgressBar.create(
@@ -86,6 +87,7 @@ module ProductMetafieldAPI
     starting_at: 0,
     total: size,
     format: '%t: %p%%  |%B|')
+
     p 'pushing product_metafields to staging.. This may take several minutes...'
     @metafields.each do |current|
       begin
@@ -97,11 +99,11 @@ module ProductMetafieldAPI
       value: current.value,
       value_type: current.value_type ))
       myprod.save
-      progressbar.increment
     rescue
       puts "#{current.namespace} metafield failed for #{myprod.title}"
       next
     end
+    progressbar.increment
     end
     p 'product_metafields successfully pushed to staging'
   end

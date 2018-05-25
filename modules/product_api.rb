@@ -171,9 +171,7 @@ def self.db_to_stage
      tags: current['tags'],
      created_at: current['created_at'],
      updated_at: current['updated_at'])
-   rescue => error
-     p "error with #{current['title']}"
-   end
+
   # pull down product just created with its new staging id
    staging_product = ShopifyAPI::Product.find(:all, params: {handle: current['handle']})
    myid = staging_product[0].attributes["id"]
@@ -202,6 +200,11 @@ def self.db_to_stage
     staging_product[0].attributes['variants'].push(hash_var)
    end
    staging_product[0].save
+ rescue
+   p "error with #{current['title']}"
+   next
+ end
+
    p "#{current['title']} saved with variants"
   end
   puts "products pushed to staging"

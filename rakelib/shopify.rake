@@ -114,8 +114,8 @@ end
 
 namespace :productmetafield do
   desc "pull active product metafields"
-  ActiveRecord::Base.connection.execute("TRUNCATE product_metafields;") if ProductMetafield.exists?
   task :save_actives do
+   ActiveRecord::Base.connection.execute("TRUNCATE product_metafields;") if ProductMetafield.exists?
    ProductMetafieldAPI.active_to_db
   end
 
