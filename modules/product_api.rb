@@ -146,7 +146,7 @@ end
 def self.db_to_stage
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-  # updates staging with products on ellie that arent on staging according to tables
+  # UPDATES staging with products on ellie that arent on staging according to tables
   product = Product.find_by_sql(
     "SELECT products.* from products
     LEFT JOIN staging_products

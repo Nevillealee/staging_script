@@ -82,12 +82,14 @@ module CustomCollectionAPI
   def self.db_to_stage
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-
+      # UPDATES CUSTOM COLLECTIONS ONLY
+      # change to cc = CustomCollection.all
+      # for full migration 
     cc = CustomCollection.find_by_sql(
-      "SELECT custom_collections.* from custom_collections
-      LEFT JOIN staging_custom_collections
-      ON custom_collections.handle = staging_custom_collections.handle
-      WHERE staging_custom_collections.handle is null;")
+          "SELECT custom_collections.* from custom_collections
+          LEFT JOIN staging_custom_collections
+          ON custom_collections.handle = staging_custom_collections.handle
+          WHERE staging_custom_collections.handle is null;")
 
     p 'Pushing local Custom Collections to staging...'
     cc.each do |current|
