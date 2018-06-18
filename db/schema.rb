@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180529183437) do
+ActiveRecord::Schema.define(version: 20180615192141) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -137,6 +137,7 @@ ActiveRecord::Schema.define(version: 20180529183437) do
     t.bigint "old_p_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "featured"
   end
 
   create_table "staging_custom_collections", id: :bigint, default: nil, force: :cascade do |t|
@@ -169,9 +170,11 @@ ActiveRecord::Schema.define(version: 20180529183437) do
 
   create_table "variants", id: :bigint, default: nil, force: :cascade do |t|
     t.string "title"
-    t.string "option1", null: false
+    t.string "option1"
+    t.string "option2"
     t.string "sku", default: ""
     t.string "price"
+    t.string "position"
     t.string "barcode", default: ""
     t.string "compare_at_price"
     t.string "fulfillment_service"
@@ -179,36 +182,12 @@ ActiveRecord::Schema.define(version: 20180529183437) do
     t.bigint "image_id"
     t.string "inventory_management"
     t.string "inventory_policy"
+    t.string "inventory_quantity"
     t.string "weight_unit"
     t.bigint "product_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "inventory_quantity"
-    t.string "position"
     t.index ["product_id"], name: "index_variants_on_product_id"
-  end
-
-  create_table "yotpos", id: :bigint, default: nil, force: :cascade do |t|
-    t.string "user_type"
-    t.string "appkey"
-    t.boolean "published"
-    t.string "review_title"
-    t.string "review_content"
-    t.integer "review_score"
-    t.datetime "date"
-    t.string "product_id"
-    t.string "product_url"
-    t.string "product_title"
-    t.string "product_description"
-    t.string "product_image_url"
-    t.string "display_name"
-    t.string "email"
-    t.string "comment_content"
-    t.string "comment_public"
-    t.datetime "comment_created_at"
-    t.string "published_image_url"
-    t.string "unpublished_image_url"
-    t.string "cf_Default_form_Fit"
   end
 
   add_foreign_key "options", "products"

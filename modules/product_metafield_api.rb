@@ -5,8 +5,8 @@ require 'ruby-progressbar'
 Dir['./modules/*.rb'].each { |file| require file }
 Dir['./models/*.rb'].each { |file| require file }
 
-# Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for product metadata cloning
+# Internal: Automate GET, POST, PUT requests to marika.com
+# and marikastaging shopify sites for product metadata cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -36,34 +36,39 @@ module ProductMetafieldAPI
   total: size,
   format: '%t: %p%%  |%B|')
   #metafield get request loop
+  begin
+    shopify_api_throttle
+    @product_ids.each do |x|
+      # change shopify_api_throttle shopify keys to active in its method before
+      # uncommenting below method call
+      # shopify_api_throttle
+      current_meta = ShopifyAPI::Metafield.all(params:
+       { resource: 'products',
+         resource_id: "#{x.id}",
+         fields: 'namespace, key, value, id, value_type' })
+         current_meta.inspect
 
-  @product_ids.each do |x|
-    # change shopify_api_throttle shopify keys to active in its method before
-    # uncommenting below method call
-    # shopify_api_throttle
-    current_meta = ShopifyAPI::Metafield.all(params:
-     { resource: 'products',
-       resource_id: "#{x.id}",
-       fields: 'namespace, key, value, id, value_type' })
-       current_meta.inspect
-
-    if !current_meta.nil? && current_meta[0]
-      if current_meta[0].namespace != 'EWD_UFAQ' &&
-      ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
-      # save current validated metafield to db
-      ProductMetafield.create(
-        id: current_meta[0].id,
-        namespace: current_meta[0].namespace,
-        key: current_meta[0].key,
-        value: current_meta[0].value,
-        value_type: current_meta[0].value_type,
-        owner_id: x.id)
-        puts "saved #{x.id}"
+      if !current_meta.nil? && current_meta[0]
+        if current_meta[0].namespace != 'EWD_UFAQ' &&
+        ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
+        # save current validated metafield to db
+        ProductMetafield.create(
+          id: current_meta[0].id,
+          namespace: current_meta[0].namespace,
+          key: current_meta[0].key,
+          value: current_meta[0].value,
+          value_type: current_meta[0].value_type,
+          owner_id: x.id)
+          puts "saved #{x.id}"
+        end
       end
+      progressbar.increment
+    rescue
+      puts "error with product mf id: #{x.id}"
+      next
     end
-    progressbar.increment
-  end
-  p 'active product metafields saved successfully'
+      p 'active product metafields saved successfully'
+    end
   end
 
   # creates an array of all product_metafields from db

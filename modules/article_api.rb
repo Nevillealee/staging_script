@@ -43,7 +43,7 @@ module ArticleAPI
       @staging_articles.each do |current|
         shopify_api_throttle
         auth = {:username => ENV['STAGING_API_KEY'], :password => ENV['STAGING_API_PW'] }
-        HTTParty.post("https://elliestaging.myshopify.com/admin/blogs/#{current['staging_blog_id']}/articles.json",
+        HTTParty.post("https://marikastaging.myshopify.com/admin/blogs/#{current['staging_blog_id']}/articles.json",
           body: { article: {
             title: current['title'],
             author: current['author'],
@@ -61,6 +61,6 @@ module ArticleAPI
           basic_auth: auth )
           p "pushed #{current['title']}"
       end
-    p 'successfully pushed articles to ellie staging...'
+    p 'successfully pushed articles to marika staging...'
   end
 end

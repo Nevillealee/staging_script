@@ -11,6 +11,7 @@ class CreateBlogs < ActiveRecord::Migration[5.1]
       t.string :tags
       t.datetime :updated_at
       t.datetime :created_at
+      t.string :admin_graphql_api_id
     end
   end
 end

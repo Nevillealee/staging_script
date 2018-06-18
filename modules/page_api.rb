@@ -5,8 +5,8 @@ require 'pp'
 require 'ruby-progressbar'
 Dir['./models/*.rb'].each { |file| require file }
 
-# Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for collects cloning
+# Internal: Automate GET, POST, PUT requests to marika.com
+# and marikastaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -29,11 +29,11 @@ module PageAPI
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_page_count = ShopifyAPI::Collect.count
     nb_pages = (active_page_count / 250.0).ceil
-    # Initalize ACTIVE_PAGE with all active collects from Ellie.com
+    # Initalize ACTIVE_PAGE with all active collects from marika.com
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_active_url =
+      marika_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/pages.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_active_url)
+      @parsed_response = HTTParty.get(marika_active_url)
       # appends each product hash to ACTIVE_PAGE array
       ACTIVE_PAGE.push(@parsed_response['pages'])
       p "active pages set #{page} loaded, sleeping 3"
@@ -78,7 +78,9 @@ module PageAPI
       title: current.title,
       body_html: current.body_html,
       author: current.author,
-      shop_id: '19046091',
+      shop_id: '1926725691',
+      created_at: current.created_at,
+      updated_at: current.updated_at,
       template_suffix: current.template_suffix || "")
       progressbar.increment
     end

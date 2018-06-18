@@ -9,7 +9,6 @@ class CreateProductMetafields < ActiveRecord::Migration[5.1]
       t.string :value
       t.bigint :owner_id
       t.string :value_type
-      t.belongs_to :product, index: true, foreign_key: true
     end
   end
 end

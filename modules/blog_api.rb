@@ -19,11 +19,11 @@ module BlogAPI
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_blog_count = ShopifyAPI::Blog.count
     nb_pages = (active_blog_count / 250.0).ceil
-    # Initalize ACTIVE_BLOG with all active blogs from Ellie.com
+    # Initalize ACTIVE_BLOG with all active blogs from marika.com
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_active_url =
+      marika_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/blogs.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_active_url)
+      @parsed_response = HTTParty.get(marika_active_url)
       # appends each blog hash to ACTIVE_BLOG array
       ACTIVE_BLOG.push(@parsed_response['blogs'])
       p "active blogs set #{page} loaded, sleeping 3"
@@ -39,11 +39,11 @@ module BlogAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_blog_count = ShopifyAPI::Blog.count
     nb_pages = (staging_blog_count / 250.0).ceil
-    # Initalize STAGING_BLOG with all staging blogs from elliestaging.myshopify.com
+    # Initalize STAGING_BLOG with all staging blogs from marikastaging.myshopify.com
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_staging_url =
+      marika_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/blogs.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_staging_url)
+      @parsed_response = HTTParty.get(marika_staging_url)
       # appends each blog hash to STAGING_BLOG array
       STAGING_BLOG.push(@parsed_response['blogs'])
       p "staging blogs set #{page} loaded, sleeping 3"
@@ -79,7 +79,7 @@ module BlogAPI
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     blog = Blog.all
-    p 'pushing blogs to ellie staging...'
+    p 'pushing blogs to marika staging...'
     blog.each do |current|
       shopify_api_throttle
       ShopifyAPI::Blog.create(
@@ -89,6 +89,8 @@ module BlogAPI
        handle: current['handle'] || "",
        feedburner_location: current['feedburner_location'] || "",
        template_suffix: current['template_suffix'] || "",
+       created_at: current['created_at'],
+       updated_at: current['updated_at'],
        tags: current['tags'] || "")
        p "pushed #{current['title']} blog"
     end
