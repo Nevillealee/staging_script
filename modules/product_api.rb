@@ -219,6 +219,7 @@ end
 #   ProductAPI.stage_update
 #   #=> updated '[product title]'s images
 def self.stage_attr_update
+  puts "updating product attributes.."
   init_actives
   ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
@@ -233,16 +234,16 @@ def self.stage_attr_update
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
     begin
-    prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
-    if (prod && prod.body_html)
-      prod.body_html = current['body_html']
+    prod = ShopifyAPI::Product.find(:first, params: { handle: current['title'] })
+    if (prod)
+      prod.images = current['images']
       # product.body_html = current['body_html']
       prod.save
     end
     progressbar.increment
   end
 rescue
-  puts "error on #{prod.title}"
+  puts "error on #{prod}"
   sleep 10
   next
 end

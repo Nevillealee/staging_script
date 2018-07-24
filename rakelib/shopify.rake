@@ -92,6 +92,11 @@ namespace :customcollection do
   task :delete do
     CustomCollectionAPI.delete_all
   end
+
+  desc "appends hardcoded exclusives collections together"
+  task :append do
+    CustomCollectionAPI.append_exclusives
+  end
 end
 
 namespace :collect do

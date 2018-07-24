@@ -84,7 +84,7 @@ module CustomCollectionAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       # UPDATES CUSTOM COLLECTIONS ONLY
       # change to cc = CustomCollection.all
-      # for full migration 
+      # for full migration
     cc = CustomCollection.find_by_sql(
           "SELECT custom_collections.* from custom_collections
           LEFT JOIN staging_custom_collections
@@ -133,4 +133,30 @@ module CustomCollectionAPI
     end
     p 'staging custom collections succesfully deleted'
   end
+
+  # appends June 18 exclusives to July 18 exclusives
+  def self.append_exclusives
+    ShopifyAPI::Base.site =
+    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    june18_id = '33208664156'
+    july18_id = '57382502492'
+    my_url = "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?collection_id=#{june18_id}"
+    @parsed_response = HTTParty.get(my_url)
+    prod_array = @parsed_response['products']
+
+    prod_array.each do |p|
+      begin
+      ShopifyAPI::Collect.create(
+        product_id: p["id"],
+        collection_id: july18_id
+      )
+      puts "#{p["title"]} added"
+    rescue => e
+      puts "#{e.message} on #{p['id']}"
+      next
+    end
+    end
+  end
+
+
 end
