@@ -2,8 +2,8 @@ require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
-# Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for custom collection cloning
+# Internal: Automate GET, POST, PUT requests to marika.com
+# and marikastaging shopify sites for custom collection cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -26,11 +26,11 @@ module CustomCollectionAPI
     active_custom_collection_count = ShopifyAPI::CustomCollection.count
     nb_pages = (active_custom_collection_count / 250.0).ceil
 
-    # Initalize ACTIVE_COLLECTION with all active custom collections from Ellie.com
+    # Initalize ACTIVE_COLLECTION with all active custom collections from marika.com
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_active_url =
+      marika_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_active_url)
+      @parsed_response = HTTParty.get(marika_active_url)
       # appends each product hash to ACTIVE_COLLECTION array
       ACTIVE_COLLECTION.push(@parsed_response['custom_collections'])
       p "active custom collections set #{page} loaded, sleeping 3"
@@ -47,11 +47,11 @@ module CustomCollectionAPI
     staging_custom_collection_count = ShopifyAPI::CustomCollection.count
     nb_pages = (staging_custom_collection_count / 250.0).ceil
     # Initalize STAGING_COLLECTION with all staging
-    # custom collections from elliestaging
+    # custom collections from marikastaging
     1.upto(nb_pages) do |page|
-      ellie_staging_url =
+      marika_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_staging_url)
+      @parsed_response = HTTParty.get(marika_staging_url)
       # appends each product hash to @STAGING_COLLECTION array
       STAGING_COLLECTION.push(@parsed_response['custom_collections'])
       p "staging custom collections set #{page} loaded, sleeping 3"

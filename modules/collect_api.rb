@@ -3,8 +3,8 @@ require 'dotenv/load'
 require 'shopify_api'
 require 'pp'
 require 'ruby-progressbar'
-# Internal: Automate GET, POST, PUT requests to Ellie.com
-# and Elliestaging shopify sites for collects cloning
+# Internal: Automate GET, POST, PUT requests to marika.com
+# and marikastaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -23,18 +23,18 @@ module CollectAPI
     sleep 10
   end
 
-  # Initalize ACTIVE_COLLECT with all active collects from Ellie.com
+  # Initalize ACTIVE_COLLECT with all active collects from marika.com
   def self.init_actives
     ShopifyAPI::Base.site =
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_collect_count = ShopifyAPI::Collect.count
     nb_pages = (active_collect_count / 250.0).ceil
     1.upto(nb_pages) do |page|
-      ellie_active_url =
+      marika_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_active_url)
+      @parsed_response = HTTParty.get(marika_active_url)
       ACTIVE_COLLECT.push(@parsed_response['collects'])
-      p "active collects set #{page} loaded, sleeping 3"
+      p "active collects set #{page}/#{nb_pages} loaded, sleeping 3"
       sleep 3
     end
     p 'active collects initialized'
@@ -42,20 +42,20 @@ module CollectAPI
     ACTIVE_COLLECT.flatten!
   end
 
-  # Initalize STAGING_COLLECT with all staging products from elliestaging
+  # Initalize STAGING_COLLECT with all staging products from marikastaging
   def self.init_stages
     ShopifyAPI::Base.site =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_collect_count = ShopifyAPI::Collect.count
     nb_pages = (staging_collect_count / 250.0).ceil
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_staging_url =
+      marika_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_staging_url)
+      @parsed_response = HTTParty.get(marika_staging_url)
       # appends each product hash to STAGING_PRODUCT array
       STAGING_COLLECT.push(@parsed_response['collects'])
-      p "staging collects set #{page} loaded, sleeping 3"
-      sleep 3
+      p "staging collects set #{page}/#{nb_pages} loaded, sleeping 3"
+      # sleep 3
     end
     p 'staging collects initialized'
     STAGING_COLLECT.flatten!
@@ -73,6 +73,7 @@ module CollectAPI
         updated_at: current['updated_at'],
         created_at: current['created_at']
       )
+      puts "saved collect id:#{current['id']}"
     end
     p 'Collects succesfully saved'
   end
@@ -102,6 +103,7 @@ module CollectAPI
 
     p 'pushing local collects to staging...'
     @collect_matches.each do |current|
+      begin
       CollectAPI.shopify_api_throttle
       ShopifyAPI::Collect.create(
         product_id: current['new_p_id'],
@@ -110,7 +112,11 @@ module CollectAPI
         updated_at: current['updated_at'],
         created_at: current['created_at']
       )
-      progressbar.increment
+    rescue
+      puts "error with collect id: #{current['id']}"
+      next
+    end
+    progressbar.increment
     end
     p 'local collects successfully pushed to staging'
   end
@@ -122,7 +128,13 @@ module CollectAPI
     p 'deleting collects...'
     STAGING_COLLECT.each do |current|
       shopify_api_throttle
+      begin
       ShopifyAPI::Collect.delete(current['id'])
+    rescue
+      puts "smart collection error with id: #{current['id']}"
+      next
+    end
+    puts "deleted #{current['id']}"
     end
     p 'staging collects succesfully deleted'
   end

@@ -8,7 +8,7 @@ Dir['./modules/*.rb'].each {|file| require file }
 Dir['./models/*.rb'].each {|file| require file }
 
 namespace :staging do
-  desc "links products/customcollections on ellie staging"
+  desc "links products/customcollections on marika staging"
   task :link_products =>
   ['product:save_actives',
     'product:save_stages',
@@ -64,7 +64,7 @@ namespace :product do
      ProductAPI.stage_attr_update
   end
 
-  desc "delete all products from elliestaging"
+  desc "delete all products from marikastaging"
   task :delete do
     ProductAPI.delete_all
   end
@@ -129,7 +129,7 @@ namespace :productmetafield do
     ProductMetafieldAPI.db_to_stage
   end
 
-  desc 'transfer active product metafields->ellie staging'
+  desc 'transfer active product metafields->marika staging'
   task :update_stage => ['save_actives', 'push_locals'] do
     p 'product metafields ported from active to staging successfully'
   end
@@ -148,58 +148,36 @@ namespace :page do
   end
 end
 
-# To update blogs, run save_actives, push_locals, save_stages, article:save_actives
+# NUKE staging then...To update blogs, run save_actives, push_locals, save_stages, article:save_actives
 # and finally article:push_locals
 namespace :blog do
-  desc 'nuke/pull ellie.com blogs'
+  desc 'nuke/pull marika.com blogs'
   task :save_actives do
       ActiveRecord::Base.connection.execute("TRUNCATE blogs;") if Blog.exists?
       BlogAPI.active_to_db
   end
 
-  desc 'pull elliestaging blogs'
+  desc 'pull marikastaging blogs'
   task :save_stages do
     ActiveRecord::Base.connection.execute("TRUNCATE staging_blogs;")
       BlogAPI.stage_to_db
   end
 
-  desc 'push local blogs->elliestaging'
+  desc 'push local blogs->marikastaging'
   task :push_locals do
       BlogAPI.db_to_stage
   end
 end
 
 namespace :article do
-  desc 'nuke/pull ellie.com articles'
+  desc 'nuke/pull marika.com articles'
   task :save_actives  => ['blog:save_actives'] do
     ActiveRecord::Base.connection.execute("TRUNCATE articles;") if Article.exists?
     ArticleAPI.active_to_db
   end
 
-  desc 'push local articles->elliestaging'
+  desc 'push local articles->marikastaging'
   task :push_locals do
       ArticleAPI.db_to_stage
-  end
-end
-
-namespace :yotpos do
-  desc 'pass in name of source csv (without ext) arg'
-  task :import_reviews, :csv_name do |t, args|
-      YotposAPI.import(args.csv_name)
-  end
-
-  desc 'convert product ids from active->staging'
-  task :convert do
-      YotposAPI.convert_id
-  end
-
-  desc 'export YOTPO review csv'
-  task :export_reviews do
-      YotposAPI.export_reviews
-  end
-
-  desc 'export YOTPO products csv'
-  task :export_products do
-      YotposAPI.export_products
   end
 end

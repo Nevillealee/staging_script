@@ -61,7 +61,6 @@ DEPENDENCIES
   activesupport
   dotenv
   httparty
-  minitest
   pg (~> 0.18.4)
   rake
   ruby-progressbar (~> 1.9)

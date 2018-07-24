@@ -17,6 +17,7 @@ class CreateArticles < ActiveRecord::Migration[5.1]
       t.string :summary_html
       t.datetime :published_at
       t.jsonb :metafields
+      t.string :admin_graphql_api_id
     end
   end
 end
