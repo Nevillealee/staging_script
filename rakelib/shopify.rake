@@ -181,3 +181,8 @@ namespace :article do
       ArticleAPI.db_to_stage
   end
 end
+
+desc 'tag products in collection id given'
+task :tag_collection, [:args] do |t, args|
+  ProductAPI.tag_collection_products(*args)
+end

@@ -137,18 +137,18 @@ module CustomCollectionAPI
   # appends June 18 exclusives to July 18 exclusives
   def self.append_exclusives
     ShopifyAPI::Base.site =
-    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    june18_id = '33208664156'
-    july18_id = '57382502492'
-    my_url = "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?collection_id=#{june18_id}"
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    origin_id = '60252192826'
+    destination_id = '74487595066'
+    my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{origin_id}&limit=250"
     @parsed_response = HTTParty.get(my_url)
     prod_array = @parsed_response['products']
-
     prod_array.each do |p|
       begin
+        shopify_api_throttle
       ShopifyAPI::Collect.create(
         product_id: p["id"],
-        collection_id: july18_id
+        collection_id: destination_id
       )
       puts "#{p["title"]} added"
     rescue => e

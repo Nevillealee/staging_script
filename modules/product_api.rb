@@ -17,8 +17,8 @@ module ProductAPI
   STAGING_PRODUCT = []
 
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    # ShopifyAPI::Base.site =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
       puts "credit limit reached, sleeping 10..."
     sleep 10
@@ -347,6 +347,31 @@ def self.delete_all
     ShopifyAPI::Product.delete(current['id'])
   end
   p 'staging products succesfully deleted'
+end
+
+# Internal: tags all products within a given collection
+def self.tag_collection_products(collection_id)
+  ShopifyAPI::Base.site =
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+  @id = collection_id
+  my_url =
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{@id}&limit=250"
+  @parsed_response = HTTParty.get(my_url)
+  my_products = @parsed_response['products']
+  my_products.each do |x|
+    shopify_api_throttle
+    og_prod = ShopifyAPI::Product.find(x["id"])
+    new_tags = og_prod.tags.split(",")
+    if new_tags.include?("#{og_prod.product_type}")
+      puts "#{og_prod.title} wasnt tagged"
+    else
+      new_tags.map! {|t| t.strip}
+      new_tags << "#{og_prod.product_type}"
+      og_prod.tags = new_tags.join(",")
+      og_prod.save
+      puts "saved #{og_prod.title}"
+    end
+  end
 end
 
 end
