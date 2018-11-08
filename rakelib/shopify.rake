@@ -98,6 +98,11 @@ namespace :customcollection do
   task :delete do
     CustomCollectionAPI.delete_all
   end
+
+  desc "appends hardcoded exclusives collections together"
+  task :append do
+    CustomCollectionAPI.append_exclusives
+  end
 end
 
 namespace :collect do
@@ -181,4 +186,9 @@ namespace :article do
   task :push_locals do
       ArticleAPI.db_to_stage
   end
+end
+
+desc 'tag products in collection id given'
+task :tag_collection, [:args] do |t, args|
+  ProductAPI.tag_collection_products(*args)
 end

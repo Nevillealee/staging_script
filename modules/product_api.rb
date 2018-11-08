@@ -17,8 +17,8 @@ module ProductAPI
   STAGING_PRODUCT = []
 
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    # ShopifyAPI::Base.site =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
       puts "credit limit reached, sleeping 10..."
     sleep 10
@@ -236,6 +236,7 @@ end
 #   ProductAPI.stage_update
 #   #=> updated '[product title]'s images
 def self.stage_attr_update
+  puts "updating product attributes.."
   init_actives
   ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
@@ -250,16 +251,18 @@ def self.stage_attr_update
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
     begin
-    prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
-    if (prod && prod.images)
+    prod = ShopifyAPI::Product.find(:first, params: { handle: current['title'] })
+    if (prod)
       prod.images = current['images']
+      # product.body_html = current['body_html']
       prod.save
     end
     puts "#{prod.title}"
     progressbar.increment
   end
-rescue => error
-  puts "#{error.message}, sleeping 10"
+rescue
+  puts "error on #{prod}"
+  sleep 10
   next
 end
   p "Process complete.."
@@ -346,19 +349,29 @@ def self.delete_all
   p 'staging products succesfully deleted'
 end
 
-#update products,variants,skus first with rake product:save_actives
-def self.fix_skus
-  sku_list = Product.find_by_sql("select * from products prod
-    INNER JOIN variants var ON
-    prod.id = var.product_id INNER JOIN
-    options op ON
-    prod.id = op.product_id;"
-  )
-  sku_list.each do |item|
-    str = item.sku.split("")
-      puts item.sku if str[0] == "1"
+# Internal: tags all products within a given collection
+def self.tag_collection_products(collection_id)
+  ShopifyAPI::Base.site =
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+  @id = collection_id
+  my_url =
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{@id}&limit=250"
+  @parsed_response = HTTParty.get(my_url)
+  my_products = @parsed_response['products']
+  my_products.each do |x|
+    shopify_api_throttle
+    og_prod = ShopifyAPI::Product.find(x["id"])
+    new_tags = og_prod.tags.split(",")
+    if new_tags.include?("#{og_prod.product_type}")
+      puts "#{og_prod.title} wasnt tagged"
+    else
+      new_tags.map! {|t| t.strip}
+      new_tags << "#{og_prod.product_type}"
+      og_prod.tags = new_tags.join(",")
+      og_prod.save
+      puts "saved #{og_prod.title}"
+    end
   end
 end
-
 
 end
