@@ -346,4 +346,19 @@ def self.delete_all
   p 'staging products succesfully deleted'
 end
 
+#update products,variants,skus first with rake product:save_actives
+def self.fix_skus
+  sku_list = Product.find_by_sql("select * from products prod
+    INNER JOIN variants var ON
+    prod.id = var.product_id INNER JOIN
+    options op ON
+    prod.id = op.product_id;"
+  )
+  sku_list.each do |item|
+    str = item.sku.split("")
+      puts item.sku if str[0] == "1"
+  end
+end
+
+
 end

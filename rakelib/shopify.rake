@@ -68,6 +68,12 @@ namespace :product do
   task :delete do
     ProductAPI.delete_all
   end
+
+  desc "fix leading zero skus from marika"
+  task :fix_skus do
+    ProductAPI.fix_skus
+  end
+
 end
 
 namespace :customcollection do
