@@ -160,8 +160,8 @@ def self.db_to_stage
   p 'pushing products to shopify...'
 
   product.each do |current|
-    ProductAPI.shopify_api_throttle
     begin
+    ProductAPI.shopify_api_throttle
     ShopifyAPI::Product.create!(
      title: current['title'],
      vendor: current['vendor'],
@@ -216,10 +216,11 @@ def self.db_to_stage
     staging_product[0].attributes['variants'].push(hash_var)
    end
    staging_product[0].save
-   puts "saved #{staging_product.handle} with variants/options"
+   puts "saved #{staging_product[0].attributes['title']} with variants/options"
    # puts staging_product[0].inspect
-     rescue
-       p "error with #{current['title']}"
+ rescue StandardError => e
+       puts e.inspect
+       p "error with #{current.title}"
        next
      end
    # p "#{current['title']} saved with variants"

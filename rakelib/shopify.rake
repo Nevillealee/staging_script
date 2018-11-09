@@ -41,7 +41,7 @@ namespace :product do
   else
     ProductAPI.active_to_db
   end
-  end
+ end
 
   desc "nuke->pull staging products"
   task :save_stages do

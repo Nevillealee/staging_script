@@ -14,8 +14,8 @@ Dir['./models/*.rb'].each { |file| require file }
 #   $ rake productmetafield:save_actives
 module ProductMetafieldAPI
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    # ShopifyAPI::Base.site =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "credit limited reached, sleepng 10..."
     sleep 10
@@ -36,9 +36,9 @@ module ProductMetafieldAPI
   total: size,
   format: '%t: %p%%  |%B|')
   #metafield get request loop
-  begin
     shopify_api_throttle
     @product_ids.each do |x|
+      begin
       # change shopify_api_throttle shopify keys to active in its method before
       # uncommenting below method call
       # shopify_api_throttle
@@ -46,13 +46,13 @@ module ProductMetafieldAPI
        { resource: 'products',
          resource_id: "#{x.id}",
          fields: 'namespace, key, value, id, value_type' })
-         current_meta.inspect
+        puts current_meta.inspect
 
       if !current_meta.nil? && current_meta[0]
         if current_meta[0].namespace != 'EWD_UFAQ' &&
         ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
         # save current validated metafield to db
-        ProductMetafield.create(
+        ProductMetafield.create!(
           id: current_meta[0].id,
           namespace: current_meta[0].namespace,
           key: current_meta[0].key,
@@ -63,9 +63,9 @@ module ProductMetafieldAPI
         end
       end
       progressbar.increment
-    rescue
-      puts "error with product mf id: #{x.id}"
-      next
+    rescue StandardError => e
+      puts "#{x.id}"
+      puts e.inspect
     end
       p 'active product metafields saved successfully'
     end

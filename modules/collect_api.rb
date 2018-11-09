@@ -1,7 +1,6 @@
 require 'httparty'
 require 'dotenv/load'
 require 'shopify_api'
-require 'pp'
 require 'ruby-progressbar'
 # Internal: Automate GET, POST, PUT requests to marika.com
 # and marikastaging shopify sites for collects cloning
@@ -15,8 +14,8 @@ module CollectAPI
   STAGING_COLLECT = []
 
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    # ShopifyAPI::Base.site =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts 'SLEEPING 10'
