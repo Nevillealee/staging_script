@@ -9,6 +9,7 @@ gem 'sinatra-activerecord'
 gem 'rake'
 gem 'sinatra'
 gem "activesupport"
+gem "shopify_cli"
 # Use postgresql as the database for Active Record
 # gem 'activerecord', '~> 5.0', '>= 5.0.0.1'
 gem 'pg', '~> 0.18.4'

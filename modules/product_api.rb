@@ -17,23 +17,20 @@ module ProductAPI
   STAGING_PRODUCT = []
 
   def self.shopify_api_throttle
-    # ShopifyAPI::Base.site =
-    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
       puts "credit limit reached, sleeping 10..."
     sleep 10
   end
 
   def self.init_actives
-    ShopifyAPI::Base.site =
-      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = my_url
     active_product_count = ShopifyAPI::Product.count
     nb_pages = (active_product_count / 250.0).ceil
 
     # Initalize ACTIVE_PRODUCT with all active products from marika.com
     1.upto(nb_pages) do |page| # throttling conditon
-      marika_active_url =
-        "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
+      marika_active_url = my_url + "/products.json?limit=250&page=#{page}"
       @parsed_response = HTTParty.get(marika_active_url)
 
       ACTIVE_PRODUCT.push(@parsed_response['products'])
@@ -44,16 +41,17 @@ module ProductAPI
 
     ACTIVE_PRODUCT.flatten!
   end
+
   def self.init_stages
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    my_url = "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = my_url
     staging_product_count = ShopifyAPI::Product.count
     nb_pages = (staging_product_count / 250.0).ceil
+    puts "initializing Marika staging products"
 
     # Initalize @STAGING_PRODUCT with all staging products from marikastaging
-    1.upto(nb_pages) do |page| # throttling conditon
-      marika_staging_url =
-        "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
+    1.upto(nb_pages) do |page|
+      marika_staging_url = my_url + "/products.json?limit=250&page=#{page}"
       @parsed_response = HTTParty.get(marika_staging_url)
       STAGING_PRODUCT.push(@parsed_response['products'])
       p "staging products set #{page}/#{nb_pages} loaded, sleeping 3"
@@ -236,7 +234,7 @@ end
 #
 #   ProductAPI.stage_update
 #   #=> updated '[product title]'s images
-def self.stage_attr_update
+def self.stage_inventory_update
   puts "updating product attributes.."
   init_actives
   ShopifyAPI::Base.clear_session
@@ -252,22 +250,28 @@ def self.stage_attr_update
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
     begin
-    prod = ShopifyAPI::Product.find(:first, params: { handle: current['title'] })
-    if (prod)
-      prod.images = current['images']
-      # product.body_html = current['body_html']
-      prod.save
+    staging_prod = ShopifyAPI::Product.find(:first, params: { title: current['title'] })
+    if (staging_prod)
+      staging_prod.variants.each do |vrnt|
+        my_title = vrnt.attributes["title"]
+        my_qty = vrnt.attributes["inventory_quantity"]
+        if my_qty <= 0
+          my_qty = Variant.find_by(title: my_title)['inventory_quantity']
+        end
+      end
+      staging_prod.save
+      puts "#{staging_prod.attributes['title']} saved"
     end
-    puts "#{prod.title}"
-    progressbar.increment
+      progressbar.increment
+    end
+  rescue StandardError => e
+    puts "error on #{current['title']}"
+    puts "#{e.inspect}"
+    sleep 2
+    next
   end
-rescue
-  puts "error on #{prod}"
-  sleep 10
-  next
-end
-  p "Process complete.."
-end
+    p "Process complete.."
+  end
 
 # Internal: saves marika.com products locally to pg database
 # All methods are module methods and should be

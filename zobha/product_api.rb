@@ -233,7 +233,7 @@
 # #
 # #   ProductAPI.stage_update
 # #   #=> updated '[product title]'s images
-# def self.stage_attr_update
+# def self.stage_inventory_update
 #   init_actives
 #   ShopifyAPI::Base.clear_session
 #   ShopifyAPI::Base.site =
