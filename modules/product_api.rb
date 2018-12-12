@@ -1,26 +1,27 @@
-require 'httparty'
-require 'dotenv/load'
-require 'shopify_api'
-require 'ruby-progressbar'
-Dir['./modules/*.rb'].each {|file| require file }
-Dir['./models/*.rb'].each {|file| require file }
-
-# Internal: Automate GET, POST, PUT requests to marika.com
-# and marikastaging shopify sites for products cloning
+# Internal: Automate GET, POST, PUT requests to Ellie.com
+# and Elliestaging shopify sites for products cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
 #
 #   $ rake product:save_stages
+require 'httparty'
+require 'dotenv/load'
+require 'shopify_api'
+require 'ruby-progressbar'
+
+Dir['./modules/*.rb'].each {|file| require file }
+Dir['./models/*.rb'].each {|file| require file }
+
 module ProductAPI
   ACTIVE_PRODUCT = []
   STAGING_PRODUCT = []
 
   def self.shopify_api_throttle
-    # ShopifyAPI::Base.site =
-    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
-      puts "credit limit reached, sleeping 10..."
+      puts "limit reached sleeping 10"
     sleep 10
   end
 
@@ -30,14 +31,14 @@ module ProductAPI
     active_product_count = ShopifyAPI::Product.count
     nb_pages = (active_product_count / 250.0).ceil
 
-    # Initalize ACTIVE_PRODUCT with all active products from marika.com
+    # Initalize ACTIVE_PRODUCT with all active products from Ellie.com
     1.upto(nb_pages) do |page| # throttling conditon
-      marika_active_url =
+      ellie_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_active_url)
+      @parsed_response = HTTParty.get(ellie_active_url)
 
       ACTIVE_PRODUCT.push(@parsed_response['products'])
-      p "active products set #{page}/#{nb_pages} loaded, sleeping 3"
+      p "active products set #{page} loaded, sleeping 3"
       sleep 3
     end
     p 'active products initialized'
@@ -50,20 +51,20 @@ module ProductAPI
     staging_product_count = ShopifyAPI::Product.count
     nb_pages = (staging_product_count / 250.0).ceil
 
-    # Initalize @STAGING_PRODUCT with all staging products from marikastaging
+    # Initalize @STAGING_PRODUCT with all staging products from elliestaging
     1.upto(nb_pages) do |page| # throttling conditon
-      marika_staging_url =
+      ellie_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_staging_url)
+      @parsed_response = HTTParty.get(ellie_staging_url)
       STAGING_PRODUCT.push(@parsed_response['products'])
-      p "staging products set #{page}/#{nb_pages} loaded, sleeping 3"
+      p "staging products set #{page} loaded, sleeping 3"
       sleep 3
     end
     p 'staging products initialized'
     STAGING_PRODUCT.flatten!
   end
 
-  # saves marika staging products
+  # saves ellie staging products
   # without variants or options attributes.
   # primary use for cloning active collections
   def self.stage_to_db
@@ -97,7 +98,7 @@ module ProductAPI
   end
 
   # Internal: pushes active_products hash array (HTTParty response)
-  # to marikastaging. Duplicate handles wont push to shopify
+  # to elliestaging. Duplicate handles wont push to shopify
   # All methods are module methods and should be
   # called on the ProductAPI module.
   #
@@ -135,7 +136,7 @@ def self.active_to_stage
   end
   p 'transfer complete'
 end
-# Internal: pushes active_products table to marikastaging
+# Internal: pushes active_products table to elliestaging
 # All methods are module methods and should be
 # called on the ProductAPI module.
 #
@@ -147,22 +148,21 @@ end
 def self.db_to_stage
   ShopifyAPI::Base.site =
     "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-  # updates staging with products on marika that arent on staging according to tables
+  # updates staging with products on ellie that arent on staging according to tables
   product = Product.find_by_sql(
-      "SELECT products.* from products
-      LEFT JOIN staging_products
-      ON products.handle = staging_products.handle
-      WHERE staging_products.handle is null
-      AND products.title not like '%Auto renew%';"
-    )
-  # Product.all
+    "SELECT products.* from products
+    LEFT JOIN staging_products
+    ON products.title = staging_products.title
+    WHERE staging_products.title is null
+    AND products.title not like '%Auto renew%';"
+  )
 
   p 'pushing products to shopify...'
-
   product.each do |current|
+    # TODO(Neville) commented out to test if variants will push
     ProductAPI.shopify_api_throttle
     begin
-    ShopifyAPI::Product.create!(
+    ShopifyAPI::Product.create(
      title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'] || "",
@@ -174,24 +174,16 @@ def self.db_to_stage
      tags: current['tags'],
      created_at: current['created_at'],
      updated_at: current['updated_at'])
+   rescue => error
+     p "error with #{current['title']}"
+   end
 
-  # pull down product just created with its new staging id
    staging_product = ShopifyAPI::Product.find(:all, params: {handle: current['handle']})
-
    myid = staging_product[0].attributes["id"]
    staging_product[0].attributes['variants'].clear
-   # copy each variant from db table into hashes
-   # to push up with staging product via its variant array
-   staging_product[0].attributes['options'].clear
-   current.options.each do |x|
-    hash_opt =  ShopifyAPI::Option.new(
-      "name"=> x.name,
-      "position"=> x.position,
-      "values"=> x.values
-    )
-    hash_opt.prefix_options = { product_id: myid }
-    staging_product[0].attributes['options'].push(hash_opt)
-   end
+
+   # temp_variant = ShopifyAPI::Variant.find(staging_product[0].attributes['variants'][0].attributes['id'])
+   # var_id = staging_product[0].attributes['variants'][0].attributes['id']
 
    current.variants.each do |x|
     hash_var =  ShopifyAPI::Variant.new(
@@ -204,30 +196,23 @@ def self.db_to_stage
       "inventory_management"=> x.inventory_management,
       "position"=> x.position,
       "option1"=> x.option1,
-      "option2"=> x.option2,
       "barcode"=> x.barcode,
       "grams"=> x.grams,
       # "image_id"=> x.image_id,
-      "inventory_quantity" => x.inventory_quantity,
-      "weight_unit"=> x.weight_unit
+      "weight_unit"=> x.weight_unit,
     )
-    # linked product_id lives in prefix_options key not attributes!
+
     hash_var.prefix_options = { product_id: myid }
     staging_product[0].attributes['variants'].push(hash_var)
    end
+
    staging_product[0].save
-   puts "saved #{staging_product.handle} with variants/options"
-   # puts staging_product[0].inspect
-     rescue
-       p "error with #{current['title']}"
-       next
-     end
-   # p "#{current['title']} saved with variants"
+   puts "#{current['title']}"
   end
   puts "products pushed to staging"
 end
 
-# Internal: Update marika staging product images
+# Internal: Update ellie staging product images
 # All methods are module methods and should be
 # called on the ProductAPI module.
 #
@@ -236,7 +221,6 @@ end
 #   ProductAPI.stage_update
 #   #=> updated '[product title]'s images
 def self.stage_attr_update
-  puts "updating product attributes.."
   init_actives
   ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
@@ -251,24 +235,23 @@ def self.stage_attr_update
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
     begin
-    prod = ShopifyAPI::Product.find(:first, params: { handle: current['title'] })
+    prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
     if (prod)
-      prod.images = current['images']
-      # product.body_html = current['body_html']
+      prod.variants = current['variants']
       prod.save
+    puts "updated #{prod.title}'s variants"
     end
-    puts "#{prod.title}"
     progressbar.increment
   end
 rescue
-  puts "error on #{prod}"
+  puts "error on #{prod.title}. sleeping 10 seconds"
   sleep 10
   next
 end
   p "Process complete.."
 end
 
-# Internal: saves marika.com products locally to pg database
+# Internal: saves ellie.com products locally to pg database
 # All methods are module methods and should be
 # called on the ProductAPI module.
 #
@@ -293,25 +276,23 @@ def self.active_to_db
       images: current['images'],
       image: current['image'],
       created_at: current['created_at'],
-      updated_at: current['updated_at'])
+      updated_at: current['updated_at'],
+    )
     current['variants'].each do |current_variant|
-      Variant.create!(
+      Variant.create(
       id: current_variant['id'],
       product_id: prod.id,
       title: current_variant['title'],
       option1: current_variant['option1'],
-      option2: current_variant['option2'],
       sku: current_variant['sku'],
       price: current_variant['price'],
       barcode: current_variant['barcode'],
       compare_at_price: current_variant['compare_at_price'],
       fulfillment_service: current_variant['fulfillment_service'],
-      position: current_variant['position'],
       grams: current_variant['grams'],
       image_id: current_variant['image_id'],
       inventory_management: current_variant['inventory_management'],
       inventory_policy: current_variant['inventory_policy'],
-      inventory_quantity: current_variant['inventory_quantity'],
       weight_unit: current_variant['weight_unit'])
     end
     current['options'].each do |current_option|
@@ -329,7 +310,7 @@ def self.active_to_db
   p 'Active products saved succesfully'
 end
 
-# Internal: Deletes all marika staging products
+# Internal: Deletes all ellie staging products
 # All methods are module methods and should be
 # called on the ProductAPI module.
 #
@@ -337,41 +318,24 @@ end
 #
 #   ProductAPI.delete_all
 #   #=> staging products succesfully deleted
-def self.delete_all
-  ShopifyAPI::Base.site =
-    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    init_stages
-  p 'deleting products...'
-  STAGING_PRODUCT.each do |current|
-    shopify_api_throttle
-    ShopifyAPI::Product.delete(current['id'])
-  end
-  p 'staging products succesfully deleted'
-end
-
-# Internal: tags all products within a given collection
-def self.tag_collection_products(collection_id)
-  ShopifyAPI::Base.site =
-    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
-  @id = collection_id
-  my_url =
-    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{@id}&limit=250"
-  @parsed_response = HTTParty.get(my_url)
-  my_products = @parsed_response['products']
-  my_products.each do |x|
-    shopify_api_throttle
-    og_prod = ShopifyAPI::Product.find(x["id"])
-    new_tags = og_prod.tags.split(",")
-    if new_tags.include?("#{og_prod.product_type}")
-      puts "#{og_prod.title} wasnt tagged"
-    else
-      new_tags.map! {|t| t.strip}
-      new_tags << "#{og_prod.product_type}"
-      og_prod.tags = new_tags.join(",")
-      og_prod.save
-      puts "saved #{og_prod.title}"
+def self.delete_duplicates
+    my_ids =[]
+    my_prod = StagingProduct.all
+    my_prod.each do |current|
+      result  = StagingProduct.where(title: current.title)
+      my_ids << current.id if result.size > 1
     end
-  end
+    puts my_ids.inspect
+
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    my_ids.each do |id_value|
+      shopify_api_throttle
+      puts id_value
+      ShopifyAPI::Product.delete(id_value.to_s)
+      puts "deleted #{id_value}"
+    end
+    p 'staging products succesfully deleted'
 end
 
 end

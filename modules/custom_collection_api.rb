@@ -1,7 +1,3 @@
-require 'httparty'
-require 'dotenv/load'
-require 'shopify_api'
-require 'pp'
 # Internal: Automate GET, POST, PUT requests to marika.com
 # and marikastaging shopify sites for custom collection cloning
 # from active to staging. (See rakelib dir)
@@ -9,6 +5,11 @@ require 'pp'
 # Examples
 #
 #   $ rake customcollection:save_actives
+require 'httparty'
+require 'dotenv/load'
+require 'shopify_api'
+require 'pp'
+
 module CustomCollectionAPI
   ACTIVE_COLLECTION = []
   STAGING_COLLECTION = []
@@ -134,12 +135,13 @@ module CustomCollectionAPI
     p 'staging custom collections succesfully deleted'
   end
 
-  # appends June 18 exclusives to July 18 exclusives
+  # appends month YY exclusives to July 18 exclusives
   def self.append_exclusives
     ShopifyAPI::Base.site =
     "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
-    origin_id = '60252192826'
-    destination_id = '74487595066'
+    # "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    origin_id = '77232308282'
+    destination_id = '83443056698'
     my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{origin_id}&limit=250"
     @parsed_response = HTTParty.get(my_url)
     prod_array = @parsed_response['products']

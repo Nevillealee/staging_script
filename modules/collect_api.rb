@@ -1,8 +1,3 @@
-require 'httparty'
-require 'dotenv/load'
-require 'shopify_api'
-require 'pp'
-require 'ruby-progressbar'
 # Internal: Automate GET, POST, PUT requests to marika.com
 # and marikastaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
@@ -10,52 +5,64 @@ require 'ruby-progressbar'
 # Examples
 #
 #   $ rake collect:push_locals
+require 'httparty'
+require 'dotenv/load'
+require 'shopify_api'
+require 'pp'
+require 'ruby-progressbar'
+
 module CollectAPI
   ACTIVE_COLLECT = []
   STAGING_COLLECT = []
 
+  stage_key = ENV['STAGING_API_KEY']
+  stage_pw = ENV['STAGING_API_PW']
+  stage_shop = ENV['STAGING_SHOP']
+  @stage_url =
+    "https://#{stage_key}:#{stage_pw}@#{stage_shop}.myshopify.com/admin"
+
+  active_key = ENV['ACTIVE_API_KEY']
+  active_pw = ENV['ACTIVE_API_PW']
+  active_shop = ENV['ACTIVE_SHOP']
+  @active_url =
+    "https://#{active_key}:#{active_pw}@#{active_shop}.myshopify.com/admin"
+
+
   def self.shopify_api_throttle
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = @stage_url
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts 'SLEEPING 10'
     sleep 10
   end
 
-  # Initalize ACTIVE_COLLECT with all active collects from marika.com
+  # Initalize ACTIVE_COLLECT with all active collects from ellie.com
   def self.init_actives
-    ShopifyAPI::Base.site =
-      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = @active_url
     active_collect_count = ShopifyAPI::Collect.count
     nb_pages = (active_collect_count / 250.0).ceil
     1.upto(nb_pages) do |page|
-      marika_active_url =
-        "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_active_url)
+      ellie_active_url = @active_url + "/collects.json?limit=250&page=#{page}"
+      @parsed_response = HTTParty.get(ellie_active_url)
       ACTIVE_COLLECT.push(@parsed_response['collects'])
       p "active collects set #{page}/#{nb_pages} loaded, sleeping 3"
       sleep 3
     end
     p 'active collects initialized'
-
     ACTIVE_COLLECT.flatten!
   end
 
-  # Initalize STAGING_COLLECT with all staging products from marikastaging
+  # Initalize STAGING_COLLECT with all staging products from elliestaging
   def self.init_stages
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = @stage_url
     staging_collect_count = ShopifyAPI::Collect.count
+    puts "#{staging_collect_count} collects"
     nb_pages = (staging_collect_count / 250.0).ceil
-    1.upto(nb_pages) do |page| # throttling conditon
-      marika_staging_url =
-        "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/collects.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_staging_url)
-      # appends each product hash to STAGING_PRODUCT array
+    1.upto(nb_pages) do |page|
+      ellie_staging_url = @stage_url + "/collects.json?limit=250&page=#{page}"
+      @parsed_response = HTTParty.get(ellie_staging_url)
       STAGING_COLLECT.push(@parsed_response['collects'])
-      p "staging collects set #{page}/#{nb_pages} loaded, sleeping 3"
-      # sleep 3
+      p "staging collects set #{page}/#{nb_pages} loaded"
     end
     p 'staging collects initialized'
     STAGING_COLLECT.flatten!
@@ -79,8 +86,7 @@ module CollectAPI
   end
 
   def self.db_to_stage
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    ShopifyAPI::Base.site = @stage_url
     # creates an array of active(old) and staging(new)
     # product/custom collection ids objects matched by handle
     @collect_matches = Collect.find_by_sql(
@@ -122,8 +128,11 @@ module CollectAPI
   end
 
   def self.delete_all
+    mykey = ENV['STAGING_API_KEY']
+    mypw = ENV['STAGING_API_PW']
+    shop = ENV['STAGING_SHOP']
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{mykey}:#{mypw}@#{shop}.myshopify.com/admin"
       init_stages
     p 'deleting collects...'
     STAGING_COLLECT.each do |current|
@@ -138,4 +147,6 @@ module CollectAPI
     end
     p 'staging collects succesfully deleted'
   end
+
+
 end

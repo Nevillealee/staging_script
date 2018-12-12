@@ -8,16 +8,21 @@ Dir['./modules/*.rb'].each {|file| require file }
 Dir['./models/*.rb'].each {|file| require file }
 
 namespace :staging do
-  desc "links products/customcollections on marika staging"
-  task :link_products =>
+  desc "migrates collect/collection/products/metafields to ellie staging"
+  task :migrate =>
   ['product:save_actives',
+    'product:save_stages', # then rake product:db_to_stage then rake product:save_stages
+    'product:db_to_stage',
     'product:save_stages',
     'customcollection:save_actives',
+    'customcollection:save_stages', # then push active to staging then resave staging
+    'customcollection:push_locals',
     'customcollection:save_stages',
     'collect:save_actives',
-    'collect:push_locals'
+    'collect:push_locals',
+    'productmetafield:update_stage',
     ] do
-    p 'staging products successfully linked to staging custom collections'
+    p 'ellie successfully migrated to ellie staging'
   end
 end
 
@@ -60,13 +65,13 @@ namespace :product do
   end
 
   desc "update staging products from db"
-  task :update_stages do
+  task :update_stage_attr do
      ProductAPI.stage_attr_update
   end
 
-  desc "delete all products from marikastaging"
+  desc "delete all products from elliestaging"
   task :delete do
-    ProductAPI.delete_all
+    ProductAPI.delete_duplicates
   end
 end
 
@@ -129,7 +134,7 @@ namespace :productmetafield do
     ProductMetafieldAPI.db_to_stage
   end
 
-  desc 'transfer active product metafields->marika staging'
+  desc 'transfer active product metafields->ellie staging'
   task :update_stage => ['save_actives', 'push_locals'] do
     p 'product metafields ported from active to staging successfully'
   end
@@ -151,32 +156,32 @@ end
 # NUKE staging then...To update blogs, run save_actives, push_locals, save_stages, article:save_actives
 # and finally article:push_locals
 namespace :blog do
-  desc 'nuke/pull marika.com blogs'
+  desc 'nuke/pull ellie.com blogs'
   task :save_actives do
       ActiveRecord::Base.connection.execute("TRUNCATE blogs;") if Blog.exists?
       BlogAPI.active_to_db
   end
 
-  desc 'pull marikastaging blogs'
+  desc 'pull elliestaging blogs'
   task :save_stages do
     ActiveRecord::Base.connection.execute("TRUNCATE staging_blogs;")
       BlogAPI.stage_to_db
   end
 
-  desc 'push local blogs->marikastaging'
+  desc 'push local blogs->elliestaging'
   task :push_locals do
       BlogAPI.db_to_stage
   end
 end
 
 namespace :article do
-  desc 'nuke/pull marika.com articles'
+  desc 'nuke/pull ellie.com articles'
   task :save_actives  => ['blog:save_actives'] do
     ActiveRecord::Base.connection.execute("TRUNCATE articles;") if Article.exists?
     ArticleAPI.active_to_db
   end
 
-  desc 'push local articles->marikastaging'
+  desc 'push local articles->elliestaging'
   task :push_locals do
       ArticleAPI.db_to_stage
   end

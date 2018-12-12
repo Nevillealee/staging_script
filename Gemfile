@@ -12,3 +12,4 @@ gem "activesupport"
 # Use postgresql as the database for Active Record
 # gem 'activerecord', '~> 5.0', '>= 5.0.0.1'
 gem 'pg', '~> 0.18.4'
+gem "pry"
