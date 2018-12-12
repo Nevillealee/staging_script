@@ -159,10 +159,16 @@ def self.db_to_stage
 
   p 'pushing products to shopify...'
   product.each do |current|
+<<<<<<< HEAD
     # TODO(Neville) commented out to test if variants will push
     ProductAPI.shopify_api_throttle
     begin
     ShopifyAPI::Product.create(
+=======
+    begin
+    ProductAPI.shopify_api_throttle
+    ShopifyAPI::Product.create!(
+>>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
      title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'] || "",
@@ -207,7 +213,18 @@ def self.db_to_stage
    end
 
    staging_product[0].save
+<<<<<<< HEAD
    puts "#{current['title']}"
+=======
+   puts "saved #{staging_product[0].attributes['title']} with variants/options"
+   # puts staging_product[0].inspect
+ rescue StandardError => e
+       puts e.inspect
+       p "error with #{current.title}"
+       next
+     end
+   # p "#{current['title']} saved with variants"
+>>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
   end
   puts "products pushed to staging"
 end

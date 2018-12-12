@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+require 'httparty'
+require 'dotenv/load'
+require 'shopify_api'
+require 'ruby-progressbar'
+>>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
 # Internal: Automate GET, POST, PUT requests to marika.com
 # and marikastaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
@@ -29,7 +36,12 @@ module CollectAPI
 
 
   def self.shopify_api_throttle
+<<<<<<< HEAD
     ShopifyAPI::Base.site = @stage_url
+=======
+    # ShopifyAPI::Base.site =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+>>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts 'SLEEPING 10'

@@ -46,7 +46,7 @@ namespace :product do
   else
     ProductAPI.active_to_db
   end
-  end
+ end
 
   desc "nuke->pull staging products"
   task :save_stages do
@@ -73,6 +73,12 @@ namespace :product do
   task :delete do
     ProductAPI.delete_duplicates
   end
+
+  desc "fix leading zero skus from marika"
+  task :fix_skus do
+    ProductAPI.fix_skus
+  end
+
 end
 
 namespace :customcollection do
