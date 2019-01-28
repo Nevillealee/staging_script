@@ -108,6 +108,11 @@ namespace :customcollection do
   task :append do
     CustomCollectionAPI.append_exclusives
   end
+
+  desc "adds tag to all products in collection"
+  task :tag_products do
+    CustomCollectionAPI.add_product_tags
+  end
 end
 
 namespace :collect do
@@ -140,9 +145,9 @@ namespace :productmetafield do
     ProductMetafieldAPI.db_to_stage
   end
 
-  desc 'transfer active product metafields->ellie staging'
-  task :update_stage => ['save_actives', 'push_locals'] do
-    p 'product metafields ported from active to staging successfully'
+  desc "update staging product metafields"
+  task :update_stage do
+   ProductMetafieldAPI.update_staging
   end
 end
 
@@ -191,9 +196,4 @@ namespace :article do
   task :push_locals do
       ArticleAPI.db_to_stage
   end
-end
-
-desc 'tag products in collection id given'
-task :tag_collection, [:args] do |t, args|
-  ProductAPI.tag_collection_products(*args)
 end

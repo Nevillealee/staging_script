@@ -5,8 +5,8 @@ require 'ruby-progressbar'
 Dir['./modules/*.rb'].each { |file| require file }
 Dir['./models/*.rb'].each { |file| require file }
 
-# Internal: Automate GET, POST, PUT requests to marika.com
-# and marikastaging shopify sites for product metadata cloning
+# Internal: Automate GET, POST, PUT requests to ellie.com
+# and elliestaging shopify sites for product metadata cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -14,14 +14,9 @@ Dir['./models/*.rb'].each { |file| require file }
 #   $ rake productmetafield:save_actives
 module ProductMetafieldAPI
   def self.shopify_api_throttle
-<<<<<<< HEAD
-=======
-    # ShopifyAPI::Base.site =
-    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
     return if ShopifyAPI.credit_left > 5
     puts "credit limited reached, sleepng 10..."
-    sleep 10
+    sleep 5
   end
 
   def self.active_to_db
@@ -39,7 +34,6 @@ module ProductMetafieldAPI
   starting_at: 0,
   total: size,
   format: '%t: %p%%  |%B|')
-<<<<<<< HEAD
   begin
     shopify_api_throttle
     @product_ids.each do |x|
@@ -61,32 +55,6 @@ module ProductMetafieldAPI
             value_type: current_meta[0].value_type,
             owner_id: x.id
           )
-=======
-  #metafield get request loop
-    shopify_api_throttle
-    @product_ids.each do |x|
-      begin
-      # change shopify_api_throttle shopify keys to active in its method before
-      # uncommenting below method call
-      # shopify_api_throttle
-      current_meta = ShopifyAPI::Metafield.all(params:
-       { resource: 'products',
-         resource_id: "#{x.id}",
-         fields: 'namespace, key, value, id, value_type' })
-        puts current_meta.inspect
-
-      if !current_meta.nil? && current_meta[0]
-        if current_meta[0].namespace != 'EWD_UFAQ' &&
-        ShopifyAPI::CustomCollection.find(:all, params: { product_id: x.id })
-        # save current validated metafield to db
-        ProductMetafield.create!(
-          id: current_meta[0].id,
-          namespace: current_meta[0].namespace,
-          key: current_meta[0].key,
-          value: current_meta[0].value,
-          value_type: current_meta[0].value_type,
-          owner_id: x.id)
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
           puts "saved #{x.id}"
         end
       end
@@ -99,12 +67,13 @@ module ProductMetafieldAPI
     end
   end
 
-  # creates an array of all product_metafields from db
-  # iterates through array creating new product_metafields
-  # one by one
   def self.db_to_stage
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    stage_key = ENV['STAGING_API_KEY']
+    stage_pw = ENV['STAGING_API_PW']
+    stage_shop = ENV['STAGING_SHOP']
+    stage_url =
+      "https://#{stage_key}:#{stage_pw}@#{stage_shop}.myshopify.com/admin"
+    ShopifyAPI::Base.site = stage_url
 
     @metafields = ProductMetafield.find_by_sql(
       "SELECT product_metafields.*,
@@ -137,6 +106,52 @@ module ProductMetafieldAPI
       puts "#{current.namespace} metafield failed for #{myprod.title}"
       next
     end
+    progressbar.increment
+    end
+    p 'product_metafields successfully pushed to staging'
+  end
+
+  def self.update_staging
+    stage_key = ENV['STAGING_API_KEY']
+    stage_pw = ENV['STAGING_API_PW']
+    stage_shop = ENV['STAGING_SHOP']
+    stage_url =
+      "https://#{stage_key}:#{stage_pw}@#{stage_shop}.myshopify.com/admin"
+    ShopifyAPI::Base.site = stage_url
+
+    @metafields = ProductMetafield.find_by_sql(
+      "SELECT product_metafields.*,
+       p.title as active_product,
+       sp.id as staging_product_id
+       FROM product_metafields
+       INNER JOIN products p ON product_metafields.owner_id = p.id
+       INNER JOIN staging_products sp ON p.handle = sp.handle
+       where product_metafields.namespace = 'ellie_order_info';")
+       puts "#{@metafields.size} Metafields to process"
+    # creates progress bar because of long method run time
+    size = @metafields.size
+    progressbar = ProgressBar.create(
+    title: 'Progess',
+    starting_at: 0,
+    total: size,
+    format: '%t: %p%%  |%B|')
+
+    p 'pushing product_metafields to staging.. This may take several minutes...'
+    @metafields.each do |current|
+      begin
+      shopify_api_throttle
+      myprod = ShopifyAPI::Product.find(current.staging_product_id)
+      myprod.add_metafield(ShopifyAPI::Metafield.new(
+      namespace: current.namespace,
+      key: current.key,
+      value: current.value,
+      value_type: current.value_type ))
+      myprod.save
+      puts "#{myprod.title} metafield updated"
+      rescue
+        puts "#{current.namespace} metafield failed for #{myprod.title}"
+        next
+      end
     progressbar.increment
     end
     p 'product_metafields successfully pushed to staging'

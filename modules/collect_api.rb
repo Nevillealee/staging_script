@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-=======
-require 'httparty'
-require 'dotenv/load'
-require 'shopify_api'
-require 'ruby-progressbar'
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
-# Internal: Automate GET, POST, PUT requests to marika.com
-# and marikastaging shopify sites for collects cloning
+# Internal: Automate GET, POST, PUT requests to ellie.com
+# and elliestaging shopify sites for collects cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -36,16 +29,11 @@ module CollectAPI
 
 
   def self.shopify_api_throttle
-<<<<<<< HEAD
     ShopifyAPI::Base.site = @stage_url
-=======
-    # ShopifyAPI::Base.site =
-    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts 'SLEEPING 10'
-    sleep 10
+    sleep 5
   end
 
   # Initalize ACTIVE_COLLECT with all active collects from ellie.com
@@ -101,6 +89,8 @@ module CollectAPI
     ShopifyAPI::Base.site = @stage_url
     # creates an array of active(old) and staging(new)
     # product/custom collection ids objects matched by handle
+    # TODO (Neville): refactor so that only delta collects are returned LEFT JOIN staging
+    # where handle = null; 
     @collect_matches = Collect.find_by_sql(
       "SELECT scc.id as new_cc_id, c.position, c.updated_at, c.created_at,
        scc.handle as custom_collection_handle, cc.id as old_cc_id,
@@ -121,7 +111,7 @@ module CollectAPI
 
     p 'pushing local collects to staging...'
     @collect_matches.each do |current|
-      begin
+    begin
       CollectAPI.shopify_api_throttle
       ShopifyAPI::Collect.create(
         product_id: current['new_p_id'],

@@ -19,7 +19,8 @@ module ProductAPI
 
   def self.shopify_api_throttle
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+      "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
       puts "limit reached sleeping 10"
     sleep 10
@@ -27,19 +28,20 @@ module ProductAPI
 
   def self.init_actives
     ShopifyAPI::Base.site =
-      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}"\
+      "@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     active_product_count = ShopifyAPI::Product.count
     nb_pages = (active_product_count / 250.0).ceil
 
     # Initalize ACTIVE_PRODUCT with all active products from Ellie.com
     1.upto(nb_pages) do |page| # throttling conditon
-      ellie_active_url =
-        "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(ellie_active_url)
+      ellie_active_url = "https://#{ENV['ACTIVE_API_KEY']}:"\
+      "#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/"\
+      "admin/products.json?limit=250&page=#{page}"
 
+      @parsed_response = HTTParty.get(ellie_active_url)
       ACTIVE_PRODUCT.push(@parsed_response['products'])
-      p "active products set #{page} loaded, sleeping 3"
-      sleep 3
+      p "active products set #{page} loaded"
     end
     p 'active products initialized'
 
@@ -47,18 +49,21 @@ module ProductAPI
   end
   def self.init_stages
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+      "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     staging_product_count = ShopifyAPI::Product.count
     nb_pages = (staging_product_count / 250.0).ceil
 
     # Initalize @STAGING_PRODUCT with all staging products from elliestaging
     1.upto(nb_pages) do |page| # throttling conditon
       ellie_staging_url =
-        "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/products.json?limit=250&page=#{page}"
+        "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+        "@#{ENV['STAGING_SHOP']}.myshopify.com/"\
+        "admin/products.json?limit=250&page=#{page}"
+
       @parsed_response = HTTParty.get(ellie_staging_url)
       STAGING_PRODUCT.push(@parsed_response['products'])
-      p "staging products set #{page} loaded, sleeping 3"
-      sleep 3
+      p "staging products set #{page} loaded"
     end
     p 'staging products initialized'
     STAGING_PRODUCT.flatten!
@@ -108,33 +113,34 @@ module ProductAPI
   #   #=> pushing products to shopify...
   #   #=> saved [product title]
 def self.active_to_stage
-  init_actives
-  ShopifyAPI::Base.site =
-    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-  p 'transferring active products to staging...'
-
-  ACTIVE_PRODUCT.each do |current|
-    ProductAPI.shopify_api_throttle
-    begin
-    ShopifyAPI::Product.create(
-     title: current['title'],
-     vendor: current['vendor'],
-     body_html: current['body_html'],
-     handle: current['handle'],
-     product_type: current['product_type'],
-     template_suffix: current['template_suffix'] || "",
-     variants: current['variants'],
-     options: current['options'],
-     images: current['images'],
-     image: current['image'],
-     created_at: current['created_at'],
-     updated_at: current['updated_at'])
-   rescue
-     p "error with #{current['title']}"
-     next
-   end
-  end
-  p 'transfer complete'
+  # init_actives
+  # ShopifyAPI::Base.site =
+  #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+  #   "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+  # p 'transferring active products to staging...'
+  #
+  # ACTIVE_PRODUCT.each do |current|
+  #   ProductAPI.shopify_api_throttle
+  #   begin
+  #     ShopifyAPI::Product.create(
+  #    title: current['title'],
+  #    vendor: current['vendor'],
+  #    body_html: current['body_html'],
+  #    handle: current['handle'],
+  #    product_type: current['product_type'],
+  #    template_suffix: current['template_suffix'] || "",
+  #    variants: current['variants'],
+  #    options: current['options'],
+  #    images: current['images'],
+  #    image: current['image'],
+  #    created_at: current['created_at'],
+  #    updated_at: current['updated_at'])
+  #   rescue
+  #    p "error with #{current['title']}"
+  #    next
+  #   end
+  # end
+  p 'depreciated method, use product:db_to_stage'
 end
 # Internal: pushes active_products table to elliestaging
 # All methods are module methods and should be
@@ -147,28 +153,23 @@ end
 #   #=> saved [product title]
 def self.db_to_stage
   ShopifyAPI::Base.site =
-    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-  # updates staging with products on ellie that arent on staging according to tables
+    "https://#{ENV['STAGING_API_KEY']}:"\
+    "#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+  # updates staging with new products from ellie.com
   product = Product.find_by_sql(
     "SELECT products.* from products
     LEFT JOIN staging_products
-    ON products.title = staging_products.title
-    WHERE staging_products.title is null
+    ON products.handle = staging_products.handle
+    WHERE staging_products.handle is null
     AND products.title not like '%Auto renew%';"
   )
 
   p 'pushing products to shopify...'
   product.each do |current|
-<<<<<<< HEAD
     # TODO(Neville) commented out to test if variants will push
     ProductAPI.shopify_api_throttle
     begin
     ShopifyAPI::Product.create(
-=======
-    begin
-    ProductAPI.shopify_api_throttle
-    ShopifyAPI::Product.create!(
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
      title: current['title'],
      vendor: current['vendor'],
      body_html: current['body_html'] || "",
@@ -180,16 +181,16 @@ def self.db_to_stage
      tags: current['tags'],
      created_at: current['created_at'],
      updated_at: current['updated_at'])
-   rescue => error
-     p "error with #{current['title']}"
-   end
+   rescue StandardError => e
+      p "error with #{current['title']}"
+      p e.inspect
+    end
 
-   staging_product = ShopifyAPI::Product.find(:all, params: {handle: current['handle']})
+   staging_product = ShopifyAPI::Product.find(
+     :all, params: {handle: current['handle']}
+   )
    myid = staging_product[0].attributes["id"]
    staging_product[0].attributes['variants'].clear
-
-   # temp_variant = ShopifyAPI::Variant.find(staging_product[0].attributes['variants'][0].attributes['id'])
-   # var_id = staging_product[0].attributes['variants'][0].attributes['id']
 
    current.variants.each do |x|
     hash_var =  ShopifyAPI::Variant.new(
@@ -207,24 +208,12 @@ def self.db_to_stage
       # "image_id"=> x.image_id,
       "weight_unit"=> x.weight_unit,
     )
-
     hash_var.prefix_options = { product_id: myid }
     staging_product[0].attributes['variants'].push(hash_var)
    end
 
    staging_product[0].save
-<<<<<<< HEAD
    puts "#{current['title']}"
-=======
-   puts "saved #{staging_product[0].attributes['title']} with variants/options"
-   # puts staging_product[0].inspect
- rescue StandardError => e
-       puts e.inspect
-       p "error with #{current.title}"
-       next
-     end
-   # p "#{current['title']} saved with variants"
->>>>>>> 7164481397f7ac87addb02fef8a7fc3d59f96f69
   end
   puts "products pushed to staging"
 end
@@ -241,31 +230,37 @@ def self.stage_attr_update
   init_actives
   ShopifyAPI::Base.clear_session
   ShopifyAPI::Base.site =
-    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+  "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+  "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+
   size = ACTIVE_PRODUCT.size
   progressbar = ProgressBar.create(
-  title: 'Progess',
-  starting_at: 0,
-  total: size,
-  format: '%t: %p%%  |%B|')
+    title: 'Progess',
+    starting_at: 0,
+    total: size,
+    format: '%t: %p%%  |%B|')
   # ACTIVE_PRODUCT array of hashes
+
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
+    item_ids = []
     begin
-    prod = ShopifyAPI::Product.find(:first, params: { handle: current['handle'] })
-    if (prod)
-      prod.variants = current['variants']
-      prod.save
-    puts "updated #{prod.title}'s variants"
+      stage_prod = ShopifyAPI::Product.find(
+        :first, params: { handle: current['handle'] }
+      )
+      stage_prod.variants.each{ |vrnt| item_ids << vrnt.inventory_item_id }
+      params = { inventory_item_ids: item_ids.join(",") }
+      inv_levels = ShopifyAPI::InventoryLevel.find(:all, params: params)
+      inv_levels.each{ |x| x.set 200 }
+      progressbar.increment
+    rescue StandardError => e
+      puts "error on #{prod.title}. sleeping 10 seconds"
+      puts e.inspect
+      sleep 5
+      next
     end
-    progressbar.increment
   end
-rescue
-  puts "error on #{prod.title}. sleeping 10 seconds"
-  sleep 10
-  next
-end
-  p "Process complete.."
+  puts "Process complete.."
 end
 
 # Internal: saves ellie.com products locally to pg database
@@ -308,6 +303,8 @@ def self.active_to_db
       fulfillment_service: current_variant['fulfillment_service'],
       grams: current_variant['grams'],
       image_id: current_variant['image_id'],
+      inventory_item_id: current_variant['inventory_item_id'],
+      inventory_quantity: current_variant['inventory_quantity'],
       inventory_management: current_variant['inventory_management'],
       inventory_policy: current_variant['inventory_policy'],
       weight_unit: current_variant['weight_unit'])
@@ -345,7 +342,8 @@ def self.delete_duplicates
     puts my_ids.inspect
 
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
+      "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     my_ids.each do |id_value|
       shopify_api_throttle
       puts id_value

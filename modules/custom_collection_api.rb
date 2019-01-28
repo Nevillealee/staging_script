@@ -1,5 +1,5 @@
-# Internal: Automate GET, POST, PUT requests to marika.com
-# and marikastaging shopify sites for custom collection cloning
+# Internal: Automate GET, POST, PUT requests to ellie.com
+# and elliestaging shopify sites for custom collection cloning
 # from active to staging. (See rakelib dir)
 #
 # Examples
@@ -27,11 +27,11 @@ module CustomCollectionAPI
     active_custom_collection_count = ShopifyAPI::CustomCollection.count
     nb_pages = (active_custom_collection_count / 250.0).ceil
 
-    # Initalize ACTIVE_COLLECTION with all active custom collections from marika.com
+    # Initalize ACTIVE_COLLECTION with all active custom collections from ellie.com
     1.upto(nb_pages) do |page| # throttling conditon
-      marika_active_url =
+      ellie_active_url =
         "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_active_url)
+      @parsed_response = HTTParty.get(ellie_active_url)
       # appends each product hash to ACTIVE_COLLECTION array
       ACTIVE_COLLECTION.push(@parsed_response['custom_collections'])
       p "active custom collections set #{page} loaded, sleeping 3"
@@ -48,11 +48,11 @@ module CustomCollectionAPI
     staging_custom_collection_count = ShopifyAPI::CustomCollection.count
     nb_pages = (staging_custom_collection_count / 250.0).ceil
     # Initalize STAGING_COLLECTION with all staging
-    # custom collections from marikastaging
+    # custom collections from elliestaging
     1.upto(nb_pages) do |page|
-      marika_staging_url =
+      ellie_staging_url =
         "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin/custom_collections.json?limit=250&page=#{page}"
-      @parsed_response = HTTParty.get(marika_staging_url)
+      @parsed_response = HTTParty.get(ellie_staging_url)
       # appends each product hash to @STAGING_COLLECTION array
       STAGING_COLLECTION.push(@parsed_response['custom_collections'])
       p "staging custom collections set #{page} loaded, sleeping 3"
@@ -100,7 +100,9 @@ module CustomCollectionAPI
       body_html: current.body_html,
       sort_order: current.sort_order,
       template_suffix: current.template_suffix,
-      published_scope: current.published_scope)
+      published_scope: current.published_scope
+    )
+      puts current.title
     end
     p 'transfer complete'
   end
@@ -140,8 +142,8 @@ module CustomCollectionAPI
     ShopifyAPI::Base.site =
     "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     # "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    origin_id = '77232308282'
-    destination_id = '83443056698'
+    origin_id = '83443056698'
+    destination_id = '85077459002'
     my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{origin_id}&limit=250"
     @parsed_response = HTTParty.get(my_url)
     prod_array = @parsed_response['products']
@@ -160,5 +162,37 @@ module CustomCollectionAPI
     end
   end
 
+  # adds tags to all products in given collection
+  def self.add_product_tags
+    ShopifyAPI::Base.site =
+    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    # "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    collection_id = '85521006650'
+    new_tag = 'ellie-exclusive'
+    my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{collection_id}&limit=250"
+    @parsed_response = HTTParty.get(my_url)
+    prod_array = @parsed_response['products']
+
+    prod_array.each do |prod_value|
+      p = ShopifyAPI::Product.find(prod_value['id'])
+      begin
+        shopify_api_throttle
+        my_tags = p.tags.split(",")
+        my_tags.map! {|x| x.strip}
+        puts "#{p.title} tags before: #{my_tags.inspect}"
+
+        if my_tags.exclude?(new_tag)
+          my_tags << new_tag
+          p.tags = my_tags.join(",")
+          p.save!
+          puts "#{p.title} tags now: #{my_tags.inspect}"
+        end
+      rescue => e
+        puts "#{e.message} on #{p.id}"
+        next
+      end
+    end
+    puts "tagging complete..."
+  end
 
 end
