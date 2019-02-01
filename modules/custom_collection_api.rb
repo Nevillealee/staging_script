@@ -164,13 +164,16 @@ module CustomCollectionAPI
 
   # adds tags to all products in given collection
   def self.add_product_tags
-    ShopifyAPI::Base.site =
-    "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
-    # "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    active_url =
+      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    staging_url =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     collection_id = '85521006650'
     new_tag = 'ellie-exclusive'
-    my_url = "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin/products.json?collection_id=#{collection_id}&limit=250"
-    @parsed_response = HTTParty.get(my_url)
+
+    ShopifyAPI::Base.site = active_url
+    my_endpoint = active_url + "/products.json?collection_id=#{collection_id}&limit=250"
+    @parsed_response = HTTParty.get(my_endpoint)
     prod_array = @parsed_response['products']
 
     prod_array.each do |prod_value|
@@ -187,6 +190,45 @@ module CustomCollectionAPI
           p.save!
           puts "#{p.title} tags now: #{my_tags.inspect}"
         end
+      rescue => e
+        puts "#{e.message} on #{p.id}"
+        next
+      end
+    end
+    puts "tagging complete..."
+  end
+
+  # adds tags to all products in given collection
+  def self.remove_product_tags
+    active_url =
+      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    staging_url =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    collection_id = '85077459002'
+
+    ShopifyAPI::Base.site = active_url
+    my_endpoint = active_url + "/products.json?collection_id=#{collection_id}&limit=250"
+    my_tag = 'ellie-exclusive'
+
+    @parsed_response = HTTParty.get(my_endpoint)
+    prod_array = @parsed_response['products']
+
+    prod_array.each do |prod_obj|
+      p = ShopifyAPI::Product.find(prod_obj['id'])
+      begin
+        shopify_api_throttle
+        my_tags = p.tags.split(",")
+        my_tags.map! {|x| x.strip}
+        puts "#{p.title} tags before: #{my_tags.inspect}"
+
+        my_tags.each do |t|
+          if t.include?(my_tag)
+            my_tags.delete(t)
+          end
+        end
+        p.tags = my_tags.join(",")
+        p.save!
+        puts "#{p.title} tags after: #{my_tags.inspect}"
       rescue => e
         puts "#{e.message} on #{p.id}"
         next

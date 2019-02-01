@@ -113,6 +113,11 @@ namespace :customcollection do
   task :tag_products do
     CustomCollectionAPI.add_product_tags
   end
+
+  desc "removes tag in all products in 'collection'"
+  task :untag_products do
+    CustomCollectionAPI.remove_product_tags
+  end
 end
 
 namespace :collect do
