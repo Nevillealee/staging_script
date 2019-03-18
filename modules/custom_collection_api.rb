@@ -168,7 +168,8 @@ module CustomCollectionAPI
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     staging_url =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    collection_id = '85521006650'
+    # marika_active = "https://91ed9a464305ecb03ee1e20282e39b41:483fc89937bb3a4a7edc85b25e18e347@marikaactive.myshopify.com/admin"
+    collection_id = '86375432250'
     new_tag = 'ellie-exclusive'
 
     ShopifyAPI::Base.site = active_url
@@ -200,15 +201,17 @@ module CustomCollectionAPI
 
   # adds tags to all products in given collection
   def self.remove_product_tags
-    active_url =
-      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
-    staging_url =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    collection_id = '85077459002'
+    # active_url =
+    #   "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+    # staging_url =
+    #   "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
 
-    ShopifyAPI::Base.site = active_url
-    my_endpoint = active_url + "/products.json?collection_id=#{collection_id}&limit=250"
-    my_tag = 'ellie-exclusive'
+    collection_id = '84205011062'
+
+
+    ShopifyAPI::Base.site = marika_active
+    my_endpoint = marika_active + "/products.json?collection_id=#{collection_id}&limit=250"
+    my_tag = 'final_sale'
 
     @parsed_response = HTTParty.get(my_endpoint)
     prod_array = @parsed_response['products']

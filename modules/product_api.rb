@@ -243,18 +243,15 @@ def self.stage_attr_update
 
   ACTIVE_PRODUCT.each do |current|
     shopify_api_throttle
-    item_ids = []
     begin
       stage_prod = ShopifyAPI::Product.find(
         :first, params: { handle: current['handle'] }
       )
-      stage_prod.variants.each{ |vrnt| item_ids << vrnt.inventory_item_id }
-      params = { inventory_item_ids: item_ids.join(",") }
-      inv_levels = ShopifyAPI::InventoryLevel.find(:all, params: params)
-      inv_levels.each{ |x| x.set 200 }
+      stage_prod.images.concat(current['images'])
+      stage_prod.image = current['image']
       progressbar.increment
     rescue StandardError => e
-      puts "error on #{prod.title}. sleeping 10 seconds"
+      puts "error on #{current['title']}. sleeping 10 seconds"
       puts e.inspect
       sleep 5
       next

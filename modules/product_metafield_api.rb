@@ -81,7 +81,7 @@ module ProductMetafieldAPI
        sp.id as staging_product_id
        FROM product_metafields
        INNER JOIN products p ON product_metafields.owner_id = p.id
-       INNER JOIN staging_products sp ON p.title = sp.title;")
+       INNER JOIN staging_products sp ON LOWER(p.title) = LOWER(sp.title);")
        puts "#{@metafields.size} Metafields to process"
     # creates progress bar because of long method run time
     size = @metafields.size
