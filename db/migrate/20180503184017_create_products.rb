@@ -9,6 +9,7 @@ class CreateProducts < ActiveRecord::Migration[5.1]
       t.string :handle
       t.string :template_suffix
       t.string :published_scope
+      t.jsonb :variants
       t.jsonb :images
       t.jsonb :image
       t.string :tags, array: true

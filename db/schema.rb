@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180615192141) do
+ActiveRecord::Schema.define(version: 20190528222033) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -108,11 +108,13 @@ ActiveRecord::Schema.define(version: 20180615192141) do
     t.string "handle"
     t.string "template_suffix"
     t.string "published_scope"
+    t.jsonb "variants"
     t.jsonb "images"
     t.jsonb "image"
     t.string "tags", array: true
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean "available", default: false
   end
 
   create_table "staging_blogs", id: :bigint, default: nil, force: :cascade do |t|
@@ -166,6 +168,7 @@ ActiveRecord::Schema.define(version: 20180615192141) do
     t.jsonb "options"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "available", default: false
   end
 
   create_table "variants", id: :bigint, default: nil, force: :cascade do |t|

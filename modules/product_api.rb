@@ -296,29 +296,11 @@ def self.active_to_db
       published_scope: current['published_scope'],
       tags: current['tags'],
       images: current['images'],
+      variants: current['variants'],
       image: current['image'],
       created_at: current['created_at'],
       updated_at: current['updated_at'])
-    current['variants'].each do |current_variant|
-      Variant.create!(
-      id: current_variant['id'],
-      product_id: prod.id,
-      title: current_variant['title'],
-      option1: current_variant['option1'],
-      option2: current_variant['option2'],
-      sku: current_variant['sku'],
-      price: current_variant['price'],
-      barcode: current_variant['barcode'],
-      compare_at_price: current_variant['compare_at_price'],
-      fulfillment_service: current_variant['fulfillment_service'],
-      position: current_variant['position'],
-      grams: current_variant['grams'],
-      image_id: current_variant['image_id'],
-      inventory_management: current_variant['inventory_management'],
-      inventory_policy: current_variant['inventory_policy'],
-      inventory_quantity: current_variant['inventory_quantity'],
-      weight_unit: current_variant['weight_unit'])
-    end
+
     current['options'].each do |current_option|
       Option.create!(
       id: current_option['id'],
@@ -377,6 +359,67 @@ def self.tag_collection_products(collection_id)
       puts "saved #{og_prod.title}"
     end
   end
+end
+
+def self.set_staging_availability
+  puts "starting set_staging_availability.."
+  my_products = StagingProduct.all
+  puts "products to check: #{my_products.size}"
+  pass_count = 0
+  fail_count = 0
+  my_products.each do |prod|
+    set_true = true
+    if prod.variants.size >= 1
+      prod.variants.each do |var|
+        next unless var['inventory_quantity'] == 0
+        puts "FAILED #{prod.title} inventory count= #{var['title']}: #{var['inventory_quantity']}"
+        fail_count = fail_count + 1
+        set_true = false
+      end
+      prod.available = true if set_true
+      prod.save!
+      pass_count = pass_count + 1
+    end
+  end
+  puts "product availablility setting complete!"
+  puts "Passed: #{pass_count}, Failed: #{fail_count}"
+end
+
+def self.set_active_availability
+  puts "starting set_staging_availability.."
+  my_products = Product.all
+  puts "products to check: #{my_products.size}"
+  pass_count = 0
+  fail_count = 0
+  my_products.each do |prod|
+    set_true = true
+    if prod.variants.size >= 1
+      prod.variants.each do |var|
+        if var['inventory_quantity'] == 0
+          puts "FAILED #{prod.title} inventory count= #{var['title']}: #{var['inventory_quantity']}"
+          set_true = false
+          prod.available = 0
+          prod.save!
+          fail_count = fail_count + 1
+        else
+          set_true = true
+        end
+      end
+      if set_true
+        puts "#{prod.title} passed! vars=#{prod.variants.inspect}"
+        prod.available = true
+        pass_count = pass_count + 1
+        prod.save!
+      end
+    elsif prod.variants.size == 0
+      set_true = false
+      prod.available == false
+      prod.save!
+      fail_count = fail_count + 1
+    end
+  end
+  puts "product availablility setting complete!"
+  puts "Passed: #{pass_count}, Failed: #{fail_count}"
 end
 
 end

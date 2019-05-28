@@ -74,6 +74,15 @@ namespace :product do
     ProductAPI.fix_skus
   end
 
+  desc "set staging product availablility"
+  task :set_staging_avail do
+    ProductAPI.set_staging_availability
+  end
+
+  desc "set active product availablility"
+  task :set_active_avail do
+    ProductAPI.set_active_availability
+  end
 end
 
 namespace :customcollection do
