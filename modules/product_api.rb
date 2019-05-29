@@ -422,4 +422,29 @@ def self.set_active_availability
   puts "Passed: #{pass_count}, Failed: #{fail_count}"
 end
 
+def self.set_metafield_style_number(site)
+  if site == 'staging'
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    products = StagingProducts.where(available: true)
+  elsif site == 'active'
+    ShopifyAPI::Base.site =
+      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
+      products = Product.where(available: true)
+  end
+  products.each do |prod|
+    begin
+      current_meta = ShopifyAPI::Metafield.new("namespace" => 'products', "key" => 'stylenumber', "value" => prod.handle, "value_type" => 'String')
+      current_meta.prefix_options = {:resource => 'products', :resource_id => prod.id.to_s}
+      current_meta.save
+      shopify_api_throttle
+      puts current_meta.inspect
+      puts "saved #{prod.title}!!"
+    rescue StandardError => e
+      puts "FAILED product_id: #{prod.id}"
+      puts e.inspect
+    end
+  end
+end
+
 end

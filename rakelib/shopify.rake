@@ -83,6 +83,12 @@ namespace :product do
   task :set_active_avail do
     ProductAPI.set_active_availability
   end
+  
+  desc 'set metafield stylenumbers [active or staging]'
+  # run 'product:set_active_avail' or 'product:set_staging_avail' first
+  task :update_style_number, [:args] do |t, args|
+    ProductAPI.set_metafield_style_number(*args)
+  end
 end
 
 namespace :customcollection do
