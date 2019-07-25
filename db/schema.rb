@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20181226233424) do
+ActiveRecord::Schema.define(version: 20190401201818) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -77,6 +77,48 @@ ActiveRecord::Schema.define(version: 20181226233424) do
     t.string "image"
     t.integer "position"
     t.index ["product_id"], name: "index_options_on_product_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.string "order_id"
+    t.string "transaction_id"
+    t.string "charge_status"
+    t.string "payment_processor"
+    t.integer "address_is_active"
+    t.string "status"
+    t.string "order_type"
+    t.string "charge_id"
+    t.string "address_id"
+    t.string "shopify_id"
+    t.string "shopify_order_id"
+    t.string "shopify_order_number"
+    t.string "shopify_cart_token"
+    t.datetime "shipping_date"
+    t.datetime "scheduled_at"
+    t.datetime "shipped_date"
+    t.datetime "processed_at"
+    t.string "customer_id"
+    t.string "first_name"
+    t.string "last_name"
+    t.integer "is_prepaid"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.string "email"
+    t.jsonb "line_items"
+    t.decimal "total_price", precision: 10, scale: 2
+    t.jsonb "shipping_address"
+    t.jsonb "billing_address"
+    t.datetime "synced_at"
+    t.boolean "has_sub_id", default: true
+    t.bigint "subscription_id"
+    t.index ["address_id"], name: "index_orders_on_address_id"
+    t.index ["charge_id"], name: "index_orders_on_charge_id"
+    t.index ["customer_id"], name: "index_orders_on_customer_id"
+    t.index ["order_id"], name: "index_orders_on_order_id"
+    t.index ["shopify_id"], name: "index_orders_on_shopify_id"
+    t.index ["shopify_order_id"], name: "index_orders_on_shopify_order_id"
+    t.index ["shopify_order_number"], name: "index_orders_on_shopify_order_number"
+    t.index ["transaction_id"], name: "index_orders_on_transaction_id"
   end
 
   create_table "pages", id: :bigint, default: nil, force: :cascade do |t|

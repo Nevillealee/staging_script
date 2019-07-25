@@ -22,8 +22,8 @@ module ProductAPI
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
       "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 5
-      puts "limit reached sleeping 10"
-    sleep 10
+      puts "limit reached sleeping 5"
+    sleep 5
   end
 
   def self.init_actives
@@ -73,19 +73,23 @@ module ProductAPI
   # without variants or options attributes.
   # primary use for cloning active collections
   def self.stage_to_db
+    puts "sleeping 120 seconds to allow shopify product generation"
+    sleep 120
     init_stages
     p 'saving staging products...'
 
     STAGING_PRODUCT.each do |current|
+      next if StagingProduct.exists?(handle: current['handle'])
+      puts "new staging product: #{current['title']}"
       begin
-        StagingProduct.create(
+        StagingProduct.create!(
         title: current['title'],
         id: current['id'],
         body_html: current['body_html'],
         vendor: current['vendor'],
         product_type: current['product_type'],
         handle: current['handle'],
-        template_suffix: current['template_suffix'] || '',
+        template_suffix: current['template_suffix'],
         published_scope: current['published_scope'],
         tags: current['tags'],
         images: current['images'],
@@ -94,8 +98,9 @@ module ProductAPI
         image: current['image'],
         created_at: current['created_at'],
         updated_at: current['updated_at'])
-      rescue
+      rescue StandardError => e
         puts "error with #{current['title']}"
+        print e.messages
         next
       end
     end
@@ -160,24 +165,23 @@ def self.db_to_stage
     "SELECT products.* from products
     LEFT JOIN staging_products
     ON products.handle = staging_products.handle
-    WHERE staging_products.handle is null
+    WHERE staging_products.handle is NULL
     AND products.title not like '%Auto renew%';"
   )
 
   p 'pushing products to shopify...'
   product.each do |current|
-    # TODO(Neville) commented out to test if variants will push
     ProductAPI.shopify_api_throttle
     begin
     ShopifyAPI::Product.create(
      title: current['title'],
      vendor: current['vendor'],
-     body_html: current['body_html'] || "",
+     body_html: current['body_html'],
      handle: current['handle'],
-     product_type: current['product_type'] || "",
-     template_suffix: current['template_suffix'] || "",
-     images: current['images'] || "",
-     image: current['image'] || "",
+     product_type: current['product_type'],
+     template_suffix: current['template_suffix'],
+     images: current['images'],
+     image: current['image'],
      tags: current['tags'],
      created_at: current['created_at'],
      updated_at: current['updated_at'])
@@ -251,13 +255,44 @@ def self.stage_attr_update
       stage_prod.image = current['image']
       progressbar.increment
     rescue StandardError => e
-      puts "error on #{current['title']}. sleeping 10 seconds"
+      puts "error on #{current['title']}"
       puts e.inspect
-      sleep 5
       next
     end
   end
   puts "Process complete.."
+end
+
+def self.inventory_update
+  ShopifyAPI::Base.site =
+    "https://#{ENV['STAGING_API_KEY']}:"\
+    "#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+
+    staging_products = StagingProduct.all
+    staging_products.each do |stage_prod|
+      ProductAPI.shopify_api_throttle
+      begin
+        stage_prod['variants'].each do |variant|
+          result = Variant.find_by_sql("SELECT variants.* from staging_products s
+            INNER JOIN products a ON a.handle = s.handle INNER JOIN variants ON variants.product_id = a.id
+            WHERE s.id = #{stage_prod.id} AND variants.title = '#{variant['title']}';"
+          )
+          active_qty = result[0]['inventory_quantity']
+          next unless active_qty.to_i > 0
+          params = {inventory_item_ids: variant['inventory_item_id']}
+          inventory_item = ShopifyAPI::InventoryLevel.find(:first, params: params)
+          inventory_item.set(active_qty)
+          puts inventory_item.inspect
+        end
+      rescue StandardError => e
+        puts "#{stage_prod['title']} failed..."
+        puts e.inspect
+        next
+      end
+    end
+
+
+
 end
 
 # Internal: saves ellie.com products locally to pg database
@@ -321,33 +356,27 @@ def self.active_to_db
   p 'Active products saved succesfully'
 end
 
-# Internal: Deletes all ellie staging products
+# Internal: Deletes all duplicate ellie staging products
 # All methods are module methods and should be
 # called on the ProductAPI module.
 #
 # Examples
 #
-#   ProductAPI.delete_all
-#   #=> staging products succesfully deleted
-def self.delete_duplicates
-    my_ids =[]
-    my_prod = StagingProduct.all
-    my_prod.each do |current|
-      result  = StagingProduct.where(title: current.title)
-      my_ids << current.id if result.size > 1
-    end
-    puts my_ids.inspect
-
-    ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
-      "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
-    my_ids.each do |id_value|
-      shopify_api_throttle
-      puts id_value
-      ShopifyAPI::Product.delete(id_value.to_s)
-      puts "deleted #{id_value}"
-    end
-    p 'staging products succesfully deleted'
+#   ProductAPI.delete_dups
+#   #=> duplicate staging products succesfully deleted
+def self.delete_dups
+  ShopifyAPI::Base.site =
+    "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+  dup_products = StagingProduct.find_by_sql(
+    "SELECT * from staging_products where handle like '%-_';"
+  )
+  p 'deleting duplicate staging products...'
+  dup_products.each do |current|
+    puts "#{current['handle']} deleted"
+    shopify_api_throttle
+    ShopifyAPI::Product.delete(current['id'])
+  end
+  p 'duplicate staging products succesfully deleted'
 end
 
 end

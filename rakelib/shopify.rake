@@ -20,6 +20,7 @@ namespace :staging do
     'customcollection:save_stages',
     'collect:save_actives',
     'collect:push_locals',
+    'productmetafield:save_actives',
     'productmetafield:update_stage',
     ] do
     p 'ellie successfully migrated to ellie staging'
@@ -41,7 +42,7 @@ namespace :product do
   desc "nuke->pull active products"
   task :save_actives do
   if Product.exists?
-    ActiveRecord::Base.connection.execute("TRUNCATE products CASCADE;")
+    ActiveRecord::Base.connection.execute("TRUNCATE products RESTART IDENTITY CASCADE;")
     ProductAPI.active_to_db
   else
     ProductAPI.active_to_db
@@ -50,7 +51,8 @@ namespace :product do
 
   desc "nuke->pull staging products"
   task :save_stages do
-    ActiveRecord::Base.connection.execute("TRUNCATE staging_products;") if StagingProduct.exists?
+    # method skips existing staging products based on handle, TRUNCATE unecessary
+    # ActiveRecord::Base.connection.execute("TRUNCATE staging_products RESTART IDENTITY;") if StagingProduct.exists?
     ProductAPI.stage_to_db
   end
 
@@ -69,9 +71,9 @@ namespace :product do
      ProductAPI.stage_attr_update
   end
 
-  desc "delete all products from elliestaging"
-  task :delete do
-    ProductAPI.delete_duplicates
+  desc "delete all dup staging products"
+  task :delete_dups do
+    ProductAPI.delete_dups
   end
 
   desc "fix leading zero skus from marika"
@@ -79,12 +81,17 @@ namespace :product do
     ProductAPI.fix_skus
   end
 
+  desc "Update inventory on staging"
+  task :inventory_to_stage do
+    ProductAPI.inventory_update
+  end
+
 end
 
 namespace :customcollection do
   desc "nuke/pull active custom collection to db"
   task :save_actives do
-    ActiveRecord::Base.connection.execute("TRUNCATE custom_collections;") if CustomCollection.exists?
+    ActiveRecord::Base.connection.execute("TRUNCATE custom_collections RESTART IDENTITY;") if CustomCollection.exists?
     CustomCollectionAPI.active_to_db
   end
 
@@ -93,15 +100,15 @@ namespace :customcollection do
      CustomCollectionAPI.db_to_stage
   end
 
-  desc "saves staging custom collections to db"
+  desc "saves 'new' staging custom collections to db"
   task :save_stages do
-    ActiveRecord::Base.connection.execute("TRUNCATE staging_custom_collections;") if StagingCustomCollection.exists?
+    # ActiveRecord::Base.connection.execute("TRUNCATE staging_custom_collections RESTART IDENTITY;")
     CustomCollectionAPI.stage_to_db
   end
 
-  desc "deletes all staging custom collections"
-  task :delete do
-    CustomCollectionAPI.delete_all
+  desc "deletes duplicate staging custom collections"
+  task :delete_dups do
+    CustomCollectionAPI.delete_dups
   end
 
   desc "appends hardcoded exclusives collections together"
@@ -123,7 +130,7 @@ end
 namespace :collect do
   desc "nuke/pull active collects"
   task :save_actives do
-    ActiveRecord::Base.connection.execute("TRUNCATE collects;") if Collect.exists?
+    ActiveRecord::Base.connection.execute("TRUNCATE collects RESTART IDENTITY;") if Collect.exists?
     CollectAPI.active_to_db
   end
 
@@ -141,7 +148,7 @@ end
 namespace :productmetafield do
   desc "pull active product metafields"
   task :save_actives do
-   ActiveRecord::Base.connection.execute("TRUNCATE product_metafields;") if ProductMetafield.exists?
+   ActiveRecord::Base.connection.execute("TRUNCATE product_metafields RESTART IDENTITY;") if ProductMetafield.exists?
    ProductMetafieldAPI.active_to_db
   end
 
@@ -159,7 +166,7 @@ end
 namespace :page do
   desc "nuke/pull active pages"
   task :save_actives do
-    ActiveRecord::Base.connection.execute("TRUNCATE pages;") if Page.exists?
+    ActiveRecord::Base.connection.execute("TRUNCATE pages RESTART IDENTITY;") if Page.exists?
     PageAPI.active_to_db
    end
 
@@ -174,7 +181,7 @@ end
 namespace :blog do
   desc 'nuke/pull ellie.com blogs'
   task :save_actives do
-      ActiveRecord::Base.connection.execute("TRUNCATE blogs;") if Blog.exists?
+      ActiveRecord::Base.connection.execute("TRUNCATE blogs RESTART IDENTITY;") if Blog.exists?
       BlogAPI.active_to_db
   end
 
@@ -193,12 +200,34 @@ end
 namespace :article do
   desc 'nuke/pull ellie.com articles'
   task :save_actives  => ['blog:save_actives'] do
-    ActiveRecord::Base.connection.execute("TRUNCATE articles;") if Article.exists?
+    ActiveRecord::Base.connection.execute("TRUNCATE articles RESTART IDENTITY;") if Article.exists?
     ArticleAPI.active_to_db
   end
 
   desc 'push local articles->elliestaging'
   task :push_locals do
       ArticleAPI.db_to_stage
+  end
+end
+
+namespace :recharge do
+  desc "(1)pull all recharge ACTIVE queued orders"
+  task :pull_actives do
+    OrderAPI::Recent.new.get_full_background_orders
+  end
+
+  desc "(2)set orders w/o sub_id to false"
+  task :mark_falses do
+    OrderAPI::Recent.new.mark_falses
+  end
+
+  desc "(3)update order sub ids"
+  task :match_sub_ids do
+    OrderAPI::Recent.new.match_sub_ids
+  end
+
+  desc "(4)update recharge API with correct orders"
+  task :update_api do
+    OrderAPI::Recent.new.update_api
   end
 end

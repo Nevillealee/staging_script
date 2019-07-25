@@ -89,8 +89,8 @@ module CollectAPI
     ShopifyAPI::Base.site = @stage_url
     # creates an array of active(old) and staging(new)
     # product/custom collection ids objects matched by handle
-    # TODO (Neville): refactor so that only delta collects are returned LEFT JOIN staging
-    # where handle = null; 
+    # TODO (Neville): refactor so that only delta collects are returned
+    # WHERE c.updated_at >= '2019-##-01'
     @collect_matches = Collect.find_by_sql(
       "SELECT scc.id as new_cc_id, c.position, c.updated_at, c.created_at,
        scc.handle as custom_collection_handle, cc.id as old_cc_id,

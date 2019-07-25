@@ -11,10 +11,10 @@ GEM
       activemodel (= 5.1.4)
       activesupport (= 5.1.4)
       arel (~> 8.0)
-    activeresource (5.0.0)
-      activemodel (>= 5.0, < 6)
+    activeresource (5.1.0)
+      activemodel (>= 5.0, < 7)
       activemodel-serializers-xml (~> 1.0)
-      activesupport (>= 5.0, < 6)
+      activesupport (>= 5.0, < 7)
     activesupport (5.1.4)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (~> 0.7)
@@ -25,6 +25,10 @@ GEM
     coderay (1.1.2)
     concurrent-ruby (1.0.5)
     dotenv (2.2.1)
+    graphql (1.9.8)
+    graphql-client (0.14.0)
+      activesupport (>= 3.0, < 6.0)
+      graphql (~> 1.6)
     httparty (0.15.6)
       multi_xml (>= 0.5.2)
     i18n (0.9.3)
@@ -42,8 +46,9 @@ GEM
       rack
     rake (12.3.0)
     ruby-progressbar (1.9.0)
-    shopify_api (4.9.0)
+    shopify_api (5.2.4)
       activeresource (>= 3.0.0)
+      graphql-client
       rack
     sinatra (2.0.1)
       mustermann (~> 1.0)
@@ -70,7 +75,7 @@ DEPENDENCIES
   pry
   rake
   ruby-progressbar (~> 1.9)
-  shopify_api
+  shopify_api (~> 5.2)
   sinatra
   sinatra-activerecord
 
@@ -78,4 +83,4 @@ RUBY VERSION
    ruby 2.5.0p0
 
 BUNDLED WITH
-   1.16.2
+   1.17.3

@@ -65,6 +65,8 @@ module CustomCollectionAPI
   def self.stage_to_db
     init_stages
     STAGING_COLLECTION.each do |current|
+      next if StagingCustomCollection.exists?(handle: current['handle'])
+      puts "new staging collection: #{current['title']}"
       StagingCustomCollection.create!(
       id: current['id'],
       handle: current['handle'],
@@ -137,6 +139,21 @@ module CustomCollectionAPI
     p 'staging custom collections succesfully deleted'
   end
 
+  def self.delete_dups
+    ShopifyAPI::Base.site =
+      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+    dup_collections = StagingCustomCollection.find_by_sql(
+      "SELECT * from staging_custom_collections where handle like '%-_' or handle like '%-__';"
+    )
+    p 'deleting duplicate Custom Collections...'
+    dup_collections.each do |current|
+      puts "#{current['handle']} deleted"
+      shopify_api_throttle
+      ShopifyAPI::CustomCollection.delete(current['id'])
+    end
+    p 'duplicate staging custom collections succesfully deleted'
+  end
+
   # appends month YY exclusives to July 18 exclusives
   def self.append_exclusives
     ShopifyAPI::Base.site =
@@ -169,7 +186,7 @@ module CustomCollectionAPI
     staging_url =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     # marika_active = "https://91ed9a464305ecb03ee1e20282e39b41:483fc89937bb3a4a7edc85b25e18e347@marikaactive.myshopify.com/admin"
-    collection_id = '86375432250'
+    collection_id = '90052427834'
     new_tag = 'ellie-exclusive'
 
     ShopifyAPI::Base.site = active_url
