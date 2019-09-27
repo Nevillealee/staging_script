@@ -179,14 +179,14 @@ module CustomCollectionAPI
     end
   end
 
-  # adds tags to all products in given collection
+  # adds tags to all products in given collection(merchandising will set up**)
   def self.add_product_tags
     active_url =
       "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     staging_url =
       "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
     # marika_active = "https://91ed9a464305ecb03ee1e20282e39b41:483fc89937bb3a4a7edc85b25e18e347@marikaactive.myshopify.com/admin"
-    collection_id = '90052427834'
+    collection_id = '91469578298'
     new_tag = 'ellie-exclusive'
 
     ShopifyAPI::Base.site = active_url
