@@ -118,7 +118,7 @@ namespace :customcollection do
 
   desc "adds tag to all products in collection"
   task :tag_products do
-    CustomCollectionAPI.add_product_tags
+    CustomCollectionAPI.add_product_tags('91469578298', 'ellie-exclusive')
   end
 
   desc "removes tag in all products in 'collection'"
