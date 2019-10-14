@@ -8,12 +8,17 @@ Dir['./models/*.rb'].each {|file| require file }
 CURRENT_MONTH = Date.today.strftime("%B")
 CURRENT_YEAR = Date.today.strftime("%Y")
 MY_TAG = "%#{Date.today.strftime('%m%y')}_collection%" # 1019_collection
+RETURNING_TAG = "%#{Date.today.strftime('%m%y')}R_collection%" # 1019R_collection
 ROLLOVER_PRODUCTS = Product.where("tags LIKE ?", MY_TAG )
+RETURNING_PRODUCTS = Product.where("tags LIKE ?", RETURNING_TAG )
+
 COMING_SOON_TEMPLATE = "coming-soon"
 NOT_FOR_SALE_TEMPLATE = "not-for-sale"
 PAST_COLLECTION_TEMPLATE = "past-collection.bra"
+CURRENT_TEMPLATE = "current-collection-may2018"
 ONE_TIME_TEMPLATE = "one-time-purchase"
 EXCLUSIVE_TAG = "ellie-exclusive"
+
 EXCLUSIVES_COLLECTION_ID = ""
 PAST_COLLECTION_TITLE = "- The #{CURRENT_MONTH} Collection (#{CURRENT_YEAR})"
 PAST_COLLECTION_PRICE = "54.95"
@@ -31,14 +36,18 @@ def isTwoItem?(_title)
   return /- 2 [iI]tem[sS]?/.match?(_title)
 end
 
-def isOneTime(_title)
+def isOneTime?(_title)
   return /- [Oo]ne [Tt]ime [Pp]urchase/.match?(_title)
+end
+
+def isReturnCollection?(_title)
+  _title.match?(/- [tT]he \w* Collection [(]\d{4}[)]/)
 end
 
 # pass in 'bring_back' for returning products, use 'add_to_past' if adding prod to past collections
 def changeTitle(_title, choice)
   if choice == "bring_back"
-    return _title.gsub(PAST_COLLECTION_TITLE, "- 3 Items")
+    return _title.gsub(/- [tT]he \w* Collection [(]\d{4}[)]/, "- 3 Items")
   elsif choice == "add_to_past"
     return _title.gsub(/- 3 [iI]tem[sS]?/, PAST_COLLECTION_TITLE)
   else
@@ -66,6 +75,8 @@ def changeTemplateTo(_orignal_template, choice)
     PAST_COLLECTION_TEMPLATE
   when "one-time-purchase"
     ONE_TIME_TEMPLATE
+  when "current-collection"
+    CURRENT_TEMPLATE
   else
     _orignal_template
   end
@@ -110,5 +121,38 @@ def rollover
     shopify_prod = ShopifyAPI::Product.find(prod.id)
     shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "not-for-sale")
     shopify_prod.save!
+  end
+
+  # set up returning products that werent on sale this month
+  if RETURNING_PRODUCTS.any?
+    RETURNING_THREE_ITEMS = RETURNING_PRODUCTS.select { |prod| isReturnCollection?(prod.title) }
+    RETURNING_FIVE_ITEMS = RETURNING_PRODUCTS.select { |prod| isFiveItem?(prod.title) }
+    RETURNING_TWO_ITEMS = RETURNING_PRODUCTS.select { |prod| isTwoItem?(prod.title) }
+    RETURNING_ONE_TIMES = RETURNING_PRODUCTS.select { |prod| isOneTime?(prod.title) }
+    # update returning (The #{Month} Collection (YYYY)) 3 Item product templates, prices, and titles
+    RETURNING_THREE_ITEMS.each do |prod|
+      shopify_prod = ShopifyAPI::Product.find(prod.id)
+      shopify_prod.title = changeTitle(prod.title, "bring_back")
+      shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "current-collection")
+      shopify_prod.save!
+
+      shopify_prod_variants = shopify_prod.variants
+      shopify_prod_variants.each do |variant|
+        variant.price = changePriceTo(variant.price, "current")
+        variant.save!
+      end
+    end
+    # update returning 5 Item and 2 Item product templates to product.current-collection-may2018
+    (RETURNING_FIVE_ITEMS + RETURNING_TWO_ITEMS).each do |prod|
+      shopify_prod = ShopifyAPI::Product.find(prod.id)
+      shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "current-collection")
+      shopify_prod.save!
+    end
+    # update returnin one-time product templates to product.one-time-purchase
+    RETURNING_ONE_TIMES.each do |prod|
+      shopify_prod = ShopifyAPI::Product.find(prod.id)
+      shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "one-time-purchase")
+      shopify_prod.save!
+    end
   end
 end
