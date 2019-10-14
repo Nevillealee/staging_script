@@ -55,18 +55,19 @@ def changePriceTo(original_price, choice)
     return original_price
   end
 end
-# valid choice: "no_sale", "comming_soon", or "past"
+# valid choice: "not-for-sale", "comming-soon", "one-time-purchase", or "past"
 def changeTemplateTo(_orignal_template, choice)
-  if choice == "no_sale"
-    return NOT_FOR_SALE_TEMPLATE
-  elsif choice == "coming_soon"
-    return COMING_SOON_TEMPLATE
-  elsif choice == "past"
-    return PAST_COLLECTION_TEMPLATE
-  elsif choice == "one_time"
-    return ONE_TIME_TEMPLATE
+  case choice
+  when "not-for-sale"
+    NOT_FOR_SALE_TEMPLATE
+  when "coming-soon"
+    COMING_SOON_TEMPLATE
+  when "past-collection.bra"
+    PAST_COLLECTION_TEMPLATE
+  when "one-time-purchase"
+    ONE_TIME_TEMPLATE
   else
-    return _orignal_template
+    _orignal_template
   end
 end
 
@@ -84,7 +85,7 @@ def rollover
     shopify_prod = ShopifyAPI::Product.find(prod.id)
     shopify_prod.title = changeTitle(prod.title, "add_to_past")
     # update 3 Item product templates to product.coming-soon
-    shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "coming_soon")
+    shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "coming-soon")
     shopify_prod.save!
     # update 3 item product prices to past collection prices 44.95 -> 54.95
     shopify_prod_variants = shopify_prod.variants
@@ -93,14 +94,21 @@ def rollover
       variant.save!
     end
   end
-  
+
   # update ellie exclusives collection with new products
   CustomCollectionAPI.add_product_tags(EXCLUSIVES_COLLECTION_ID, EXCLUSIVE_TAG)
 
   # update 3 Item product templates to product.one-time-purchase
   ONE_TIMES.each do |prod|
     shopify_prod = ShopifyAPI::Product.find(prod.id)
-    shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "one_time")
+    shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "one-time-purchase")
+    shopify_prod.save!
+  end
+
+  # update 5 Item and 2 Item product templates to product.not-for-sale
+  (FIVE_ITEMS + TWO_ITEMS).each do |prod|
+    shopify_prod = ShopifyAPI::Product.find(prod.id)
+    shopify_prod.template_suffix = changeTemplateTo(prod.template_suffix, "not-for-sale")
     shopify_prod.save!
   end
 end
