@@ -73,8 +73,6 @@ module ProductAPI
   # without variants or options attributes.
   # primary use for cloning active collections
   def self.stage_to_db
-    puts "sleeping 120 seconds to allow shopify product generation"
-    sleep 120
     init_stages
     p 'saving staging products...'
 
@@ -180,7 +178,7 @@ def self.db_to_stage
      handle: current['handle'],
      product_type: current['product_type'],
      template_suffix: current['template_suffix'],
-     images: current['images'],
+     # images: current['images'],
      image: current['image'],
      tags: current['tags'],
      created_at: current['created_at'],
@@ -268,7 +266,7 @@ def self.inventory_update
     "https://#{ENV['STAGING_API_KEY']}:"\
     "#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
 
-    staging_products = StagingProduct.all
+    staging_products = StagingProduct.where("created_at > ?", Date.today << 5)
     staging_products.each do |stage_prod|
       ProductAPI.shopify_api_throttle
       begin

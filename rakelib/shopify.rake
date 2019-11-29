@@ -6,6 +6,7 @@ require 'active_record'
 require 'sinatra/activerecord/rake'
 Dir['./modules/*.rb'].each {|file| require file }
 Dir['./models/*.rb'].each {|file| require file }
+require_relative '../auto_rollover.rb'
 
 namespace :staging do
   desc "migrates collect/collection/products/metafields to ellie staging"
@@ -13,6 +14,7 @@ namespace :staging do
   ['product:save_actives',
     'product:save_stages', # then rake product:db_to_stage then rake product:save_stages
     'product:db_to_stage',
+    'product:regen_sleep',
     'product:save_stages',
     'customcollection:save_actives',
     'customcollection:save_stages', # then push active to staging then resave staging
@@ -39,6 +41,12 @@ namespace :destroy do
 end
 
 namespace :product do
+  desc "sleep for product generation"
+  task :regen_sleep do
+    puts "sleeping 5 minutes to allow shopify product generation"
+    sleep 300
+ end
+
   desc "nuke->pull active products"
   task :save_actives do
   if Product.exists?
@@ -118,7 +126,7 @@ namespace :customcollection do
 
   desc "adds tag to all products in collection"
   task :tag_products do
-    CustomCollectionAPI.add_product_tags('91469578298', 'ellie-exclusive')
+    CustomCollectionAPI.add_product_tags('92265316410', 'ellie-exclusive')
   end
 
   desc "removes tag in all products in 'collection'"
@@ -229,5 +237,12 @@ namespace :recharge do
   desc "(4)update recharge API with correct orders"
   task :update_api do
     OrderAPI::Recent.new.update_api
+  end
+end
+
+namespace :rollover do
+  desc 'automates Ellie rollover tasks'
+  task :peform do
+    Rollover.perform
   end
 end

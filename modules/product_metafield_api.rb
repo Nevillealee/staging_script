@@ -18,7 +18,7 @@ module ProductMetafieldAPI
     puts "credit limited reached, sleepng 10..."
     sleep 5
   end
-
+  # pulls products metafields from products created in the last four mounths
   def self.active_to_db
   active_key = ENV['ACTIVE_API_KEY']
   active_pw = ENV['ACTIVE_API_PW']
@@ -26,7 +26,7 @@ module ProductMetafieldAPI
   active_url =
     "https://#{active_key}:#{active_pw}@#{active_shop}.myshopify.com/admin"
 
-  @product_ids = Product.select('id').all
+  @product_ids = Product.select('id').where("created_at > ?", Date.today << 4)
   ShopifyAPI::Base.site = active_url
   size = @product_ids.size
   progressbar = ProgressBar.create(
@@ -111,6 +111,7 @@ module ProductMetafieldAPI
     p 'product_metafields successfully pushed to staging'
   end
 
+  # updates ellie staging with product metafields from products created within the last four months
   def self.update_staging
     stage_key = ENV['STAGING_API_KEY']
     stage_pw = ENV['STAGING_API_PW']

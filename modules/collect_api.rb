@@ -33,7 +33,7 @@ module CollectAPI
     return if ShopifyAPI.credit_left > 5
     puts "CREDITS LEFT: #{ShopifyAPI.credit_left}"
     puts 'SLEEPING 10'
-    sleep 5
+    sleep 10
   end
 
   # Initalize ACTIVE_COLLECT with all active collects from ellie.com
@@ -100,7 +100,9 @@ module CollectAPI
        INNER JOIN products p ON c.product_id = p.id
        INNER JOIN custom_collections cc ON c.collection_id = cc.id
        INNER JOIN staging_products sp ON p.handle = sp.handle
-       INNER JOIN staging_custom_collections scc ON cc.handle = scc.handle;")
+       INNER JOIN staging_custom_collections scc ON cc.handle = scc.handle
+       where c.updated_at > '2019-09-01';
+       ;")
 
        size = @collect_matches.size
        progressbar = ProgressBar.create(
