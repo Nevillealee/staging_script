@@ -28,8 +28,8 @@ module Rollover
 
   def self.shopify_api_throttle
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:#{ENV['STAGING_API_PW']}"\
-      "@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['ACTIVE_API_KEY']}:#{ENV['ACTIVE_API_PW']}"\
+      "@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
       return if ShopifyAPI.credit_left > 3
       puts "limit reached sleeping 5"
     sleep 5
@@ -98,8 +98,8 @@ module Rollover
     ROLLOVER_PRODUCTS.each {|p| puts p.title}
     puts"--------------------------"
     ShopifyAPI::Base.site =
-      "https://#{ENV['STAGING_API_KEY']}:"\
-      "#{ENV['STAGING_API_PW']}@#{ENV['STAGING_SHOP']}.myshopify.com/admin"
+      "https://#{ENV['ACTIVE_API_KEY']}:"\
+      "#{ENV['ACTIVE_API_PW']}@#{ENV['ACTIVE_SHOP']}.myshopify.com/admin"
     three_items = ROLLOVER_PRODUCTS.select { |prod| isThreeItem?(prod.title) }
     five_items = ROLLOVER_PRODUCTS.select { |prod| isFiveItem?(prod.title) }
     two_items = ROLLOVER_PRODUCTS.select { |prod| isTwoItem?(prod.title) }
