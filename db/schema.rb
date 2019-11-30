@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190401201818) do
+ActiveRecord::Schema.define(version: 20191129122208) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -152,7 +152,7 @@ ActiveRecord::Schema.define(version: 20190401201818) do
     t.string "published_scope"
     t.jsonb "images"
     t.jsonb "image"
-    t.string "tags", array: true
+    t.string "tags"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -202,7 +202,7 @@ ActiveRecord::Schema.define(version: 20190401201818) do
     t.string "template_suffix"
     t.string "published_scope"
     t.jsonb "images"
-    t.string "tags", array: true
+    t.string "tags"
     t.jsonb "image"
     t.jsonb "variants"
     t.jsonb "options"

@@ -10,7 +10,7 @@ class CreateStagingProducts < ActiveRecord::Migration[5.1]
       t.string :template_suffix
       t.string :published_scope
       t.jsonb :images
-      t.string :tags, array: true
+      t.string :tags
       t.jsonb :image
       t.jsonb :variants
       t.jsonb :options

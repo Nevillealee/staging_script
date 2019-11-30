@@ -242,7 +242,7 @@ end
 
 namespace :rollover do
   desc 'automates Ellie rollover tasks'
-  task :peform do
+  task :perform do
     Rollover.perform
   end
 end
